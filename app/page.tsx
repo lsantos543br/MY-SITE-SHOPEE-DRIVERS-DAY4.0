@@ -33,99 +33,100 @@ const [disparosRealizados, setDisparosRealizados] = useState(0);
   const [respostaO, setRespostaO] = useState("");
   const [salvandoTratamento, setSalvandoTratamento] = useState(false);
 
-  useEffect(() => {
-    // 💡 Callback JSONP para Receber os dados da Planilha
-    (window as any).processarDadosPlanilha = (matrizCrua: any[][]) => {  
-      if (Array.isArray(matrizCrua) && matrizCrua.length > 1) {  
-        setValorK2(Number(matrizCrua?.[1]?.[10]) || 0);
-        const valorK2 = Number(matrizCrua?.[1]?.[10]) || 0;  
-        setDisparosRealizados(valorK2);  
-      
-        const cabecalho = matrizCrua[0].map(c => String(c).trim().toLowerCase());
+  useEffect(() => {  
+    // 💡 Callback JSONP para Receber os dados da Planilha  
+    (window as any).processarDadosPlanilha = (matrizCrua: any[][]) => {    
+      if (Array.isArray(matrizCrua) && matrizCrua.length > 1) {    
+        setValorK2(Number(matrizCrua?.[1]?.[10]) || 0);  
+        const valorK2 = Number(matrizCrua?.[1]?.[10]) || 0;    
+        setDisparosRealizados(valorK2);    
           
-        const idxDealDate = cabecalho.indexOf("deal date");  
-        const idxWeekend = cabecalho.indexOf("weekend");  
-        const idxHub = cabecalho.indexOf("hub");  
-        const idxAnalyst = cabecalho.indexOf("analyst");  
-        const idxDriver = cabecalho.indexOf("driver");  
-        const idxStatus = cabecalho.indexOf("status");  
-        const idxModal = cabecalho.indexOf("modal");  
-        const idxDriverId = cabecalho.indexOf("driver id");  
-        const idxTelefone = cabecalho.indexOf("telefone");  
-        const idxDataTreinamento = cabecalho.indexOf("data treinamento");  
-      
-        const motoristasFormatados = matrizCrua.slice(1).map((linha) => {  
-          const statusOriginal = idxStatus !== -1 ? String(linha[idxStatus]).trim() : "";  
+        const cabecalho = matrizCrua[0].map(c => String(c).trim().toLowerCase());  
+              
+        const idxDealDate = cabecalho.indexOf("deal date");    
+        const idxWeekend = cabecalho.indexOf("weekend");    
+        const idxHub = cabecalho.indexOf("hub");    
+        const idxAnalyst = cabecalho.indexOf("analyst");    
+        const idxDriver = cabecalho.indexOf("driver");    
+        const idxStatus = cabecalho.indexOf("status");    
+        const idxModal = cabecalho.indexOf("modal");    
+        const idxDriverId = cabecalho.indexOf("driver id");    
+        const idxTelefone = cabecalho.indexOf("telefone");    
+        const idxDataTreinamento = cabecalho.indexOf("data treinamento");    
+          
+        const motoristasFormatados = matrizCrua.slice(1).map((linha) => {    
+          const statusOriginal = idxStatus !== -1 ? String(linha[idxStatus]).trim() : "";    
           const possuiTreinamento =  
             idxDataTreinamento !== -1 && String(linha[idxDataTreinamento]).trim() !== ""  
               ? "Sim"  
               : "Não";  
-      
+    
           return {  
             dealDate: idxDealDate !== -1 ? String(linha[idxDealDate]) : "",  
             weekend: idxWeekend !== -1 ? String(linha[idxWeekend]) : "",  
             hub: idxHub !== -1 ? String(linha[idxHub]) : "",  
             analyst: idxAnalyst !== -1 ? String(linha[idxAnalyst]) : "",  
             driverName: idxDriver !== -1 ? String(linha[idxDriver]) : "",  
-      
+    
             status: statusOriginal,  
             Status: statusOriginal,  
             presenca: statusOriginal,  
-      
+    
             treinado: possuiTreinamento,  
             fezFirstTrip: statusOriginal,  
-      
+    
             dataTreinamentoInput: idxDataTreinamento !== -1 ? String(linha[idxDataTreinamento]) : "",  
-      
+    
             modal: idxModal !== -1 ? String(linha[idxModal]) : "",  
             driverId: idxDriverId !== -1 ? String(linha[idxDriverId]) : "",  
             telefone: idxTelefone !== -1 ? String(linha[idxTelefone]) : "",  
-      
+    
             Hub: idxHub !== -1 ? String(linha[idxHub]) : "",  
             Modal: idxModal !== -1 ? String(linha[idxModal]) : "",  
             Weekend: idxWeekend !== -1 ? String(linha[idxWeekend]) : "",  
             Analyst: idxAnalyst !== -1 ? String(linha[idxAnalyst]) : "",  
           };  
         }).filter(m => m.driverName !== "");  
-      
+    
         setBaseMotoristas(motoristasFormatados);  
-      
+    
         const hubsUnicos = Array.from(new Set(motoristasFormatados.map(m => m.hub).filter(Boolean))).sort();  
         const modaisUnicos = Array.from(new Set(motoristasFormatados.map(m => m.modal).filter(Boolean))).sort();  
         const semanasUnicas = Array.from(new Set(motoristasFormatados.map(m => m.weekend).filter(Boolean))).sort();  
         const analistasUnicos = Array.from(new Set(motoristasFormatados.map(m => m.analyst).filter(Boolean))).sort();  
-      
+    
         setOpcoesHubs(["TODOS", ...hubsUnicos]);  
         setOpcoesModais(["TODOS", ...modaisUnicos]);  
         setOpcoesSemanas(["TODOS", ...semanasUnicas]);  
         setOpcoesAnalistas(["TODOS", ...analistasUnicos]);  
-      
+    
         setStatus(`✅ Sincronizado com sucesso! ${motoristasFormatados.length} registros ativos.`);  
       }  
-      
+    
       const scriptConexao = document.getElementById("script-conexao-google");  
       if (scriptConexao) scriptConexao.remove();  
-    };
-
-    // 💡 Callback JSONP para Receber Confirmação de Gravação
-    (window as any).confirmarGravacaoTratamento = (resposta: any) => {
-      setSalvandoTratamento(false);
-      if (resposta && resposta.status === "success") {
-        alert(`🎯 Sucesso! O tratamento do motorista ${resposta.driverName} foi salvo na linha ${resposta.linhaGravada} da Página2.`);
-        fecharModalLimpar();
-      } else {
-        alert(`❌ Falha ao gravar dados: ${resposta.message || "Erro desconhecido"}`);
-      }
-
-      const scriptEnvio = document.getElementById("script-envio-google");
-      if (scriptEnvio) scriptEnvio.remove();
-    };
-
-    dispararSincronizacao();
-    return () => {
-      delete (window as any).processarDadosPlanilha;
-      delete (window as any).confirmarGravacaoTratamento;
-    };
+    };  
+    
+    // 💡 Callback JSONP para Receber Confirmação de Gravação  
+    (window as any).confirmarGravacaoTratamento = (resposta: any) => {  
+      setSalvandoTratamento(false);  
+      if (resposta && resposta.status === "success") {  
+        alert(`🎯 Sucesso! O tratamento do motorista ${resposta.driverName} foi salvo na linha ${resposta.linhaGravada} da Página2.`);  
+        fecharModalLimpar();  
+      } else {  
+        alert(`❌ Falha ao gravar dados: ${resposta.message || "Erro desconhecido"}`);  
+      }  
+    
+      const scriptEnvio = document.getElementById("script-envio-google");  
+      if (scriptEnvio) scriptEnvio.remove();  
+    };  
+    
+    dispararSincronizacao();  
+    
+    return () => {  
+      delete (window as any).processarDadosPlanilha;  
+      delete (window as any).confirmarGravacaoTratamento;  
+    };  
   }, []);
 
   const dispararSincronizacao = () => {
