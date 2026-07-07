@@ -503,7 +503,7 @@ export default function Dashboard({
   
             <div>  
               <p className="text-[13px] font-bold uppercase tracking-wider text-[#18181b] dark:text-blue-700">  
-                TOTAL DE DISPAROS REALIZADOS  
+                TOTAL APROXIMADO DE DISPAROS REALIZADOS      
                 (TODAS AS LINHAS DAS BASES 7 DD4-SPM E SPC SOMADAS)  
               </p>  
   
@@ -909,158 +909,169 @@ export default function Dashboard({
         {/* FUNIL & EVOLUÇÃO */}  
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">  
   
-          {/* Card 1: Funil Operacional */}  
-          <div className={`p-5 rounded-3xl border h-[480px] lg:col-span-1 flex flex-col justify-between ${estilo.card}`}>  
-            {(() => {  
-              const tLeads = totalLeads || 0;  
+{/* Card 1: Funil Operacional */}    
+<div className={`p-5 rounded-3xl border h-[480px] lg:col-span-1 flex flex-col justify-between ${estilo.card}`}>    
+  {(() => {    
+    const tDisparos = Number(disparosRealizados || 0);  
+    const tLeads = totalLeads || 0;    
   
-              const tAgendados = dadosEfetivos.filter(m => {  
-                const st = String(m.status || m.Status || '').trim().toLowerCase();  
-                return (  
-                  st === "ag. integração/treinamento" ||  
-                  st === "ag. integracao/treinamento" ||  
-                  st === "não compareceu" ||  
-                  st === "nao compareceu" ||  
-                  st === "sem vagas hub" ||  
-                  st === "ag. first trip" ||  
-                  st === "first trip em atraso" ||  
-                  st === "first trip efetuada" ||  
-                  st === ""  
-                );  
-              }).length;  
+    const tAgendados = dadosEfetivos.filter(m => {    
+      const st = String(m.status || m.Status || '').trim().toLowerCase();    
+      return (    
+        st === "ag. integração/treinamento" ||    
+        st === "ag. integracao/treinamento" ||    
+        st === "não compareceu" ||    
+        st === "nao compareceu" ||    
+        st === "sem vagas hub" ||    
+        st === "ag. first trip" ||    
+        st === "first trip em atraso" ||    
+        st === "first trip efetuada" ||    
+        st === ""    
+      );    
+    }).length;    
   
-              const tCompareceram = dadosEfetivos.filter(m => {  
-                const st = String(m.status || m.Status || '').trim().toLowerCase();  
-                return (  
-                  st === "first trip efetuada" ||  
-                  st === "efetuada" ||  
-                  st === "ag. first trip" ||  
-                  st === "first trip em atraso" ||  
-                  st === "atraso" ||  
-                  st === ""  
-                );  
-              }).length;  
+    const tCompareceram = dadosEfetivos.filter(m => {    
+      const st = String(m.status || m.Status || '').trim().toLowerCase();    
+      return (    
+        st === "first trip efetuada" ||    
+        st === "efetuada" ||    
+        st === "ag. first trip" ||    
+        st === "first trip em atraso" ||    
+        st === "atraso" ||    
+        st === ""    
+      );    
+    }).length;    
   
-              const tFirstTrip = totalFirstTrip || 0;  
+    const tFirstTrip = totalFirstTrip || 0;    
   
-              const somaValores = tAgendados + tCompareceram + tFirstTrip;  
-              const circumference = 138.23;  
+    const somaValores = tAgendados + tCompareceram + tFirstTrip;    
+    const circumference = 138.23;    
   
-              const fAgendados = somaValores > 0 ? (tAgendados / somaValores) * circumference : circumference / 3;  
-              const fCompareceram = somaValores > 0 ? (tCompareceram / somaValores) * circumference : circumference / 3;  
-              const fFirstTrip = somaValores > 0 ? (tFirstTrip / somaValores) * circumference : circumference / 3;  
+    const fAgendados = somaValores > 0 ? (tAgendados / somaValores) * circumference : circumference / 3;    
+    const fCompareceram = somaValores > 0 ? (tCompareceram / somaValores) * circumference : circumference / 3;    
+    const fFirstTrip = somaValores > 0 ? (tFirstTrip / somaValores) * circumference : circumference / 3;    
   
-              const oAgendados = 0;  
-              const oCompareceram = fAgendados;  
-              const oFirstTrip = fAgendados + fCompareceram;  
+    const oAgendados = 0;    
+    const oCompareceram = fAgendados;    
+    const oFirstTrip = fAgendados + fCompareceram;    
   
-              const obterCentroGomo = (offsetAcumulado: number, tamanhoFatia: number) => {  
-                if (somaValores === 0) return { x: 32, y: 32 };  
-                const pctMeio = ((offsetAcumulado + tamanhoFatia / 2) / circumference) * 100;  
-                const anguloRad = ((pctMeio * 3.6 - 90) * Math.PI) / 180;  
-                return {  
-                  x: (32 + 22 * Math.cos(anguloRad)).toFixed(1),  
-                  y: (32 + 22 * Math.sin(anguloRad)).toFixed(1)  
-                };  
-              };  
+    const obterCentroGomo = (offsetAcumulado: number, tamanhoFatia: number) => {    
+      if (somaValores === 0) return { x: 32, y: 32 };    
+      const pctMeio = ((offsetAcumulado + tamanhoFatia / 2) / circumference) * 100;    
+      const anguloRad = ((pctMeio * 3.6 - 90) * Math.PI) / 180;    
+      return {    
+        x: (32 + 22 * Math.cos(anguloRad)).toFixed(1),    
+        y: (32 + 22 * Math.sin(anguloRad)).toFixed(1)    
+      };    
+    };    
   
-              const txtAgendados = obterCentroGomo(oAgendados, fAgendados);  
-              const txtCompareceram = obterCentroGomo(oCompareceram, fCompareceram);  
-              const txtFirstTrip = obterCentroGomo(oFirstTrip, fFirstTrip);  
+    const txtAgendados = obterCentroGomo(oAgendados, fAgendados);    
+    const txtCompareceram = obterCentroGomo(oCompareceram, fCompareceram);    
+    const txtFirstTrip = obterCentroGomo(oFirstTrip, fFirstTrip);    
   
-              return (  
-                <div className="space-y-4 flex-1 flex flex-col">  
-                  <div className="flex items-center gap-2 text-[#0046B5] dark:text-black-400">  
-                    <BarChart3 className="w-5 h-5" />  
-                    <h4 className="text-xs font-black uppercase tracking-wider">Funil Operacional</h4>  
-                  </div>  
+    return (    
+      <div className="space-y-4 flex-1 flex flex-col">    
+        <div className="flex items-center gap-2 text-[#0046B5] dark:text-black-400">    
+          <BarChart3 className="w-5 h-5" />    
+          <h4 className="text-xs font-black uppercase tracking-wider">Funil Operacional</h4>    
+        </div>    
   
-                  <div className="flex flex-col items-center justify-center flex-1 pt-2 gap-6">  
-                    <div className="relative w-48 h-48 flex items-center justify-center filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.12)]">  
-                      <svg className="w-full h-full" viewBox="0 0 64 64">  
-                        {tAgendados > 0 && (  
-                          <circle cx="32" cy="32" r="22" fill="transparent" stroke="#a855f7" strokeWidth="11"  
-                            strokeDasharray={`${fAgendados} ${circumference}`} strokeDashoffset={`-${oAgendados}`}  
-                            className="transform -rotate-90 origin-center" />  
-                        )}  
+        <div className="flex flex-col items-center justify-center flex-1 pt-2 gap-6">    
+          <div className="relative w-48 h-48 flex items-center justify-center filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.12)]">    
+            <svg className="w-full h-full" viewBox="0 0 64 64">    
+              {tAgendados > 0 && (    
+                <circle cx="32" cy="32" r="22" fill="transparent" stroke="#a855f7" strokeWidth="11"    
+                  strokeDasharray={`${fAgendados} ${circumference}`} strokeDashoffset={`-${oAgendados}`}    
+                  className="transform -rotate-90 origin-center" />    
+              )}    
   
-                        {tCompareceram > 0 && (  
-                          <circle cx="32" cy="32" r="22" fill="transparent" stroke="#3b82f6" strokeWidth="11"  
-                            strokeDasharray={`${fCompareceram} ${circumference}`} strokeDashoffset={`-${oCompareceram}`}  
-                            className="transform -rotate-90 origin-center" />  
-                        )}  
+              {tCompareceram > 0 && (    
+                <circle cx="32" cy="32" r="22" fill="transparent" stroke="#3b82f6" strokeWidth="11"    
+                  strokeDasharray={`${fCompareceram} ${circumference}`} strokeDashoffset={`-${oCompareceram}`}    
+                  className="transform -rotate-90 origin-center" />    
+              )}    
   
-                        {tFirstTrip > 0 && (  
-                          <circle cx="32" cy="32" r="22" fill="transparent" stroke="#10b981" strokeWidth="11"  
-                            strokeDasharray={`${fFirstTrip} ${circumference}`} strokeDashoffset={`-${oFirstTrip}`}  
-                            className="transform -rotate-90 origin-center" />  
-                        )}  
+              {tFirstTrip > 0 && (    
+                <circle cx="32" cy="32" r="22" fill="transparent" stroke="#10b981" strokeWidth="11"    
+                  strokeDasharray={`${fFirstTrip} ${circumference}`} strokeDashoffset={`-${oFirstTrip}`}    
+                  className="transform -rotate-90 origin-center" />    
+              )}    
   
-                        {tAgendados > 0 && fAgendados > 10 && (  
-                          <text x={txtAgendados.x} y={txtAgendados.y} fill="#ffffff" fontSize="3.5" fontWeight="900" textAnchor="middle" dominantBaseline="central" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">  
-                            {tAgendados}  
-                          </text>  
-                        )}  
+              {tAgendados > 0 && fAgendados > 10 && (    
+                <text x={txtAgendados.x} y={txtAgendados.y} fill="#ffffff" fontSize="3.5" fontWeight="900" textAnchor="middle" dominantBaseline="central" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">    
+                  {tAgendados}    
+                </text>    
+              )}    
   
-                        {tCompareceram > 0 && fCompareceram > 10 && (  
-                          <text x={txtCompareceram.x} y={txtCompareceram.y} fill="#ffffff" fontSize="3.5" fontWeight="900" textAnchor="middle" dominantBaseline="central" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">  
-                            {tCompareceram}  
-                          </text>  
-                        )}  
+              {tCompareceram > 0 && fCompareceram > 10 && (    
+                <text x={txtCompareceram.x} y={txtCompareceram.y} fill="#ffffff" fontSize="3.5" fontWeight="900" textAnchor="middle" dominantBaseline="central" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">    
+                  {tCompareceram}    
+                </text>    
+              )}    
   
-                        {tFirstTrip > 0 && fFirstTrip > 10 && (  
-                          <text x={txtFirstTrip.x} y={txtFirstTrip.y} fill="#ffffff" fontSize="3.5" fontWeight="900" textAnchor="middle" dominantBaseline="central" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">  
-                            {tFirstTrip}  
-                          </text>  
-                        )}  
-                      </svg>  
+              {tFirstTrip > 0 && fFirstTrip > 10 && (    
+                <text x={txtFirstTrip.x} y={txtFirstTrip.y} fill="#ffffff" fontSize="3.5" fontWeight="900" textAnchor="middle" dominantBaseline="central" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">    
+                  {tFirstTrip}    
+                </text>    
+              )}    
+            </svg>    
   
-                      <div className="absolute w-20 h-20 rounded-full flex flex-col items-center justify-center bg-white dark:bg-zinc-950 shadow-md border border-zinc-500/10">  
-                        <span className="text-xl font-black text-[#0046B5] dark:text-blue-400">  
-                          {tLeads}  
-                        </span>  
-                        <p className="text-[8px] uppercase tracking-wider text-zinc-400 font-black">Total Leads</p>  
-                      </div>  
-                    </div>  
+            <div className="absolute w-20 h-20 rounded-full flex flex-col items-center justify-center bg-white dark:bg-zinc-950 shadow-md border border-zinc-500/10">    
+              <span className="text-xl font-black text-[#0046B5] dark:text-blue-400">    
+                {tLeads}    
+              </span>    
+              <p className="text-[8px] uppercase tracking-wider text-zinc-400 font-black">Total Leads</p>    
+            </div>    
+          </div>    
   
-                    <div className="w-full space-y-2.5">  
-                      <div className="flex items-center justify-between text-xs font-bold border-b border-zinc-500/10 pb-1.5">  
-                        <div className="flex items-center gap-2">  
-                          <span className="w-2.5 h-2.5 rounded-full bg-orange-500 shrink-0" />  
-                          <span className={estilo.textoSecundario}>1 Resposta Leads</span>  
-                        </div>  
-                        <span className="font-black text-black-800 dark:text-black-200">{tLeads} un</span>  
-                      </div>  
+          <div className="w-full space-y-2.5">    
+            <div className="flex items-center justify-between text-xs font-bold border-b border-zinc-500/10 pb-1.5">    
+              <div className="flex items-center gap-2">    
+                <span className="w-2.5 h-2.5 rounded-full bg-zinc-500 shrink-0" />    
+                <span className={estilo.textoSecundario}>0 Total de Disparos</span>    
+              </div>    
+              <span className="font-black text-zinc-800 dark:text-black-200">  
+                {tDisparos.toLocaleString("pt-BR")} un  
+              </span>    
+            </div>  
   
-                      <div className="flex items-center justify-between text-xs font-bold border-b border-zinc-500/10 pb-1.5">  
-                        <div className="flex items-center gap-2">  
-                          <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />  
-                          <span className={estilo.textoSecundario}>2 Leads Agendados</span>  
-                        </div>  
-                        <span className="font-black text-zinc-800 dark:text-black-200">{tAgendados} un</span>  
-                      </div>  
+            <div className="flex items-center justify-between text-xs font-bold border-b border-zinc-500/10 pb-1.5">    
+              <div className="flex items-center gap-2">    
+                <span className="w-2.5 h-2.5 rounded-full bg-orange-500 shrink-0" />    
+                <span className={estilo.textoSecundario}>1 Resposta Leads</span>    
+              </div>    
+              <span className="font-black text-black-800 dark:text-black-200">{tLeads} un</span>    
+            </div>    
   
-                      <div className="flex items-center justify-between text-xs font-bold border-b border-zinc-500/10 pb-1.5">  
-                        <div className="flex items-center gap-2">  
-                          <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />  
-                          <span className={estilo.textoSecundario}>3 Compareceram</span>  
-                        </div>  
-                        <span className="font-black text-zinc-800 dark:text-black-200">{tCompareceram} un</span>  
-                      </div>  
+            <div className="flex items-center justify-between text-xs font-bold border-b border-zinc-500/10 pb-1.5">    
+              <div className="flex items-center gap-2">    
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />    
+                <span className={estilo.textoSecundario}>2 Leads Agendados</span>    
+              </div>    
+              <span className="font-black text-zinc-800 dark:text-black-200">{tAgendados} un</span>    
+            </div>    
   
-                      <div className="flex items-center justify-between text-xs font-bold pb-0.5">  
-                        <div className="flex items-center gap-2">  
-                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />  
-                          <span className={estilo.textoSecundario}>4 First Trip Efetuada</span>  
-                        </div>  
-                        <span className="font-black text-zinc-800 dark:text-black-200">{tFirstTrip} un</span>  
-                      </div>  
-                    </div>  
-                  </div>  
-                </div>  
-              );  
-            })()}  
-          </div>  
+            <div className="flex items-center justify-between text-xs font-bold border-b border-zinc-500/10 pb-1.5">    
+              <div className="flex items-center gap-2">    
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />    
+                <span className={estilo.textoSecundario}>3 Compareceram</span>    
+              </div>    
+              <span className="font-black text-zinc-800 dark:text-black-200">{tCompareceram} un</span>    
+            </div>    
+  
+            <div className="flex items-center justify-between text-xs font-bold pb-0.5">    
+              <div className="flex items-center gap-2">    
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />    
+                <span className={estilo.textoSecundario}>4 First Trip Efetuada</span>    
+              </div>    
+              <span className="font-black text-zinc-800 dark:text-black-200">{tFirstTrip} un</span>    
+            </div>    
+          </div>    
+        </div>    
+      </div>    
+    );    
+  })()}    
+</div>
   
           {/* 2: Evolução de Respostas por Semana */}  
           <div className={`p-5 rounded-2xl border h-full flex flex-col justify-between lg:col-span-3 ${estilo.card}`}>  
