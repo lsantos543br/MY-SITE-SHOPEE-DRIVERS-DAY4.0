@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';  
 import {  
   Users, Calendar, CheckCircle, BarChart3, TrendingUp,  
-  Target, FilterX, Sun, Moon, ChevronDown, Check,  
+  Target, FilterX, ChevronDown, Check,  
   Activity, Download  
 } from 'lucide-react';  
   
@@ -24,8 +24,8 @@ interface DashboardProps {
   opcoesModais: string[];  
   opcoesSemanas: string[];  
   opcoesAnalistas: string[];  
-}
-
+}  
+  
 export default function Dashboard({  
   listaFiltradaDash = [],  
   modaisPagina2 = [],  
@@ -42,10 +42,18 @@ export default function Dashboard({
   opcoesModais = [],  
   opcoesSemanas = [],  
   opcoesAnalistas = [],  
-}: DashboardProps) {
-
-  // Alterado para false para iniciar no tema claro por padrão
+}: DashboardProps) {  
+  
+  // Alterado para false para iniciar no tema claro por padrão  
   const [temaEscuro, setTemaEscuro] = useState(false);  
+  
+  // ==========================================  
+  // 🙈 ANALISTAS OCULTOS  
+  // ==========================================  
+  const nomesAnalistasOcultos = ['barbara targino'];  
+  const normalizarNomeAnalista = (nome: any) => String(nome || '').trim().toLowerCase();  
+  const analistaEstaOculto = (nome: any) => nomesAnalistasOcultos.includes(normalizarNomeAnalista(nome));  
+  const opcoesAnalistasVisiveis = opcoesAnalistas.filter(a => !analistaEstaOculto(a));  
   
   // ==========================================  
   // ⚙️ TRATAMENTO DOS ARRAYS SELECIONADOS  
@@ -67,7 +75,7 @@ export default function Dashboard({
   
   const analistasSelecionados =  
     filtroAnalista && filtroAnalista !== "TODOS" && filtroAnalista.trim() !== ""  
-      ? filtroAnalista.split(',').map(x => x.trim().toLowerCase())  
+      ? filtroAnalista.split(',').map(x => x.trim().toLowerCase()).filter(x => !analistaEstaOculto(x))  
       : [];  
   
   // ==========================================  
@@ -205,7 +213,7 @@ export default function Dashboard({
   // ==========================================  
   // ✨ PERFORMANCE DOS ANALISTAS  
   // ==========================================  
-  const rankingConversao = opcoesAnalistas  
+  const rankingConversao = opcoesAnalistasVisiveis  
     .filter(a => a && a !== "TODOS")  
     .map(analista => {  
       const convertidos = dadosEfetivos.filter(m => {  
@@ -228,7 +236,7 @@ export default function Dashboard({
     })  
     .sort((a, b) => b.taxaNum - a.taxaNum);  
   
-  const rankingAtendimentos = opcoesAnalistas  
+  const rankingAtendimentos = opcoesAnalistasVisiveis  
     .filter(a => a && a !== "TODOS")  
     .map(analista => {  
       const totalAtendimentos = dadosEfetivos.filter(m => {  
@@ -248,10 +256,10 @@ export default function Dashboard({
   const cruzamentoStatusSemana: { [status: string]: { [semana: string]: number } } = {};  
   const matrizHubSemana: { [hub: string]: { [semana: string]: number } } = {};  
   const matrizAnalistaSemana: { [analista: string]: { [semana: string]: number } } = {};  
-
-  // NOVAS VARIÁVEIS PARA MODAL
-  const contagemModaisGlobais: { [key: string]: number } = {};
-  const cruzamentoModalSemana: { [modal: string]: { [semana: string]: number } } = {};
+  
+  // NOVAS VARIÁVEIS PARA MODAL  
+  const contagemModaisGlobais: { [key: string]: number } = {};  
+  const cruzamentoModalSemana: { [modal: string]: { [semana: string]: number } } = {};  
   
   dadosEfetivos.forEach(m => {  
     let stRaw = String(m.status || m.Status || 'Sem Status').trim();  
@@ -261,34 +269,36 @@ export default function Dashboard({
     const hb = String(m.hub || m.Hub || m.filial || m.Filial || 'Outros').trim();  
     const sem = String(m.weekend || m.semana || m.Weekend || m.Semana || 'Sem Semana').trim();  
     const ana = String(m.analyst || m.analista || m.Analyst || m.Analista || 'Sem Analista').trim();  
-
-    // Popular dados de Modal
-    let modalRaw = String(m.modal || m.Modal || 'Sem Modal').trim();
-    if (!modalRaw) modalRaw = 'Sem Modal';
-    contagemModaisGlobais[modalRaw] = (contagemModaisGlobais[modalRaw] || 0) + 1;
-    
+  
+    // Popular dados de Modal  
+    let modalRaw = String(m.modal || m.Modal || 'Sem Modal').trim();  
+    if (!modalRaw) modalRaw = 'Sem Modal';  
+    contagemModaisGlobais[modalRaw] = (contagemModaisGlobais[modalRaw] || 0) + 1;  
+  
     if (!cruzamentoStatusSemana[stRaw]) cruzamentoStatusSemana[stRaw] = {};  
     cruzamentoStatusSemana[stRaw][sem] = (cruzamentoStatusSemana[stRaw][sem] || 0) + 1;  
   
     if (!matrizHubSemana[hb]) matrizHubSemana[hb] = {};  
     matrizHubSemana[hb][sem] = (matrizHubSemana[hb][sem] || 0) + 1;  
   
-    if (!matrizAnalistaSemana[ana]) matrizAnalistaSemana[ana] = {};  
-    matrizAnalistaSemana[ana][sem] = (matrizAnalistaSemana[ana][sem] || 0) + 1;  
-
-    // Popular cruzamento Modal x Semana
-    if (!cruzamentoModalSemana[modalRaw]) cruzamentoModalSemana[modalRaw] = {};
-    cruzamentoModalSemana[modalRaw][sem] = (cruzamentoModalSemana[modalRaw][sem] || 0) + 1;
+    if (!analistaEstaOculto(ana)) {  
+      if (!matrizAnalistaSemana[ana]) matrizAnalistaSemana[ana] = {};  
+      matrizAnalistaSemana[ana][sem] = (matrizAnalistaSemana[ana][sem] || 0) + 1;  
+    }  
+  
+    // Popular cruzamento Modal x Semana  
+    if (!cruzamentoModalSemana[modalRaw]) cruzamentoModalSemana[modalRaw] = {};  
+    cruzamentoModalSemana[modalRaw][sem] = (cruzamentoModalSemana[modalRaw][sem] || 0) + 1;  
   });  
   
   const listaTodosStatusEncontrados = Object.keys(contagemStatusGlobais).sort(  
     (a, b) => contagemStatusGlobais[b] - contagemStatusGlobais[a]  
   );  
-
-  // Lista de todos os Modais encontrados, ordenada por quantidade
-  const listaTodosModaisEncontrados = Object.keys(contagemModaisGlobais).sort(
-    (a, b) => contagemModaisGlobais[b] - contagemModaisGlobais[a]
-  );
+  
+  // Lista de todos os Modais encontrados, ordenada por quantidade  
+  const listaTodosModaisEncontrados = Object.keys(contagemModaisGlobais).sort(  
+    (a, b) => contagemModaisGlobais[b] - contagemModaisGlobais[a]  
+  );  
   
   const obterCorBolinhaStatus = (statusNome: string) => {  
     const low = statusNome.toLowerCase();  
@@ -441,20 +451,20 @@ export default function Dashboard({
   
   return (  
     <div className={`p-6 rounded-3xl min-h-screen transition-colors duration-300 ${estilo.fundo}`}>  
-      
-      {/* CABEÇALHO DO DASHBOARD COM BOTÃO PDF (Invisível na impressão) */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 print:hidden">
-        <h1 className="text-2xl font-black uppercase tracking-wider text-[#1d4ed8] flex items-center gap-2">
-          <Activity className="w-5 h-5" /> Dashboard drivers day
-        </h1>
-        <button
-          onClick={() => window.print()}
-          className="flex items-center gap-2 bg-[#EE4D2D] hover:bg-[#d44022] text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-colors shadow-sm"
-        >
-          <Download className="w-4 h-4" /> Baixar em PDF
-        </button>
-      </div>
-
+  
+      {/* CABEÇALHO DO DASHBOARD COM BOTÃO PDF (Invisível na impressão) */}  
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 print:hidden">  
+        <h1 className="text-2xl font-black uppercase tracking-wider text-[#1d4ed8] flex items-center gap-2">  
+          <Activity className="w-5 h-5" /> Dashboard drivers day  
+        </h1>  
+        <button  
+          onClick={() => window.print()}  
+          className="flex items-center gap-2 bg-[#EE4D2D] hover:bg-[#d44022] text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-colors shadow-sm"  
+        >  
+          <Download className="w-4 h-4" /> Baixar em PDF  
+        </button>  
+      </div>  
+  
       <div className="space-y-6">  
         {/* FILTROS (Invisível na impressão) */}  
         <div className={`border p-4 rounded-2xl flex flex-col gap-4 print:hidden ${estilo.filtroContainer}`}>  
@@ -478,280 +488,278 @@ export default function Dashboard({
             <MultiSelectFiltro label="Filtrar por HUB" opcoes={opcoesHubs} valorString={filtroHub} onMudar={setFiltroHub} />  
             <MultiSelectFiltro label="Filtrar por Veículo" opcoes={opcoesModais} valorString={filtroModal} onMudar={setFiltroModal} />  
             <MultiSelectFiltro label="Filtrar por Semana" opcoes={opcoesSemanas} valorString={filtroSemana} onMudar={setFiltroSemana} />  
-            <MultiSelectFiltro label="Filtrar por Analista" opcoes={opcoesAnalistas} valorString={filtroAnalista} onMudar={setFiltroAnalista} />  
+            <MultiSelectFiltro label="Filtrar por Analista" opcoes={opcoesAnalistasVisiveis} valorString={filtroAnalista} onMudar={setFiltroAnalista} />  
           </div>  
         </div>  
   
-     {/* INDICADORES ABSOLUTOS - PRIMEIRA LINHA */}  
-<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">  
+        {/* INDICADORES ABSOLUTOS - PRIMEIRA LINHA */}  
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">  
   
-  {/* CARD 1: DISPAROS REALIZADOS (NOVO) */}  
-<div className={`p-5 rounded-2xl border flex items-center gap-4 ${estilo.card}`}>  
-  <div className="p-3 rounded-xl bg-zinc-500/10 text-zinc-500">  
-    <Activity className="w-5 h-5" />  
-  </div>  
+          {/* CARD 1: DISPAROS REALIZADOS */}  
+          <div className={`p-5 rounded-2xl border flex items-center gap-4 ${estilo.card}`}>  
+            <div className="p-3 rounded-xl bg-zinc-500/10 text-zinc-500">  
+              <Activity className="w-5 h-5" />  
+            </div>  
   
-  <div>  
-    <p className="text-[13px] font-bold uppercase tracking-wider text-[#18181b] dark:text-blue-700">  
-    TOTAL DE DISPAROS REALIZADOS
-    (TODAS AS LINHAS DAS BASES 7 DD4-SPM E SPC SOMADAS)
-    </p>  
+            <div>  
+              <p className="text-[13px] font-bold uppercase tracking-wider text-[#18181b] dark:text-blue-700">  
+                TOTAL DE DISPAROS REALIZADOS  
+                (TODAS AS LINHAS DAS BASES 7 DD4-SPM E SPC SOMADAS)  
+              </p>  
   
-    <h3 className="text-2xl font-black mt-0.5 tracking-tight flex items-baseline gap-2">  
-      <span className="text-black dark:text-black">  
-        {Number(disparosRealizados || 0).toLocaleString("pt-BR")}  
-      </span>  
-    </h3>  
-  </div>  
-</div>
-
-  {/* CARD 2: TOTAL DE LEADS QUE RESPONDERAM */}
-  <div className={`p-5 rounded-2xl border flex items-center gap-4 ${estilo.card}`}>  
-    <div className="p-3 rounded-xl bg-orange-500/10 text-orange-500">  
-      <Users className="w-5 h-5" />  
-    </div>  
-    <div>  
-      <p className="text-[13px] font-bold uppercase tracking-wider text-[#18181b] dark:text-blue-700">  
-        Total de Leads que Responderam ao disparo  
-      </p>  
-      <h3 className="text-2xl font-black mt-0.5 tracking-tight flex items-baseline gap-2">  
-        <span className="text-black dark:text-black">{totalLeads}</span>  
-        <span className="text-sm font-bold text-orange-500">/ {pctTotalLeads.toFixed(1)}%</span>  
-      </h3>  
-    </div>  
-  </div>  
-
-  {/* CARD 3: TOTAL DE TREINAMENTOS AGENDADOS */}
-  <div className={`p-5 rounded-2xl border flex items-center gap-4 ${estilo.card}`}>  
-    <div className="p-3 rounded-xl bg-purple-500/10 text-purple-500">  
-      <Activity className="w-5 h-5" />  
-    </div>  
-    <div>  
-      <p className="text-[13px] font-bold uppercase tracking-wider text-[#0046B5] dark:text-blue-700">  
-        Total de TREINAMENTOS AGENDADOS  
-      </p>  
-      <h3 className="text-2xl font-black mt-0.5 tracking-tight flex items-baseline gap-2">  
-        <span className="text-black dark:text-black">  
-          {dadosEfetivos.filter(m => {  
-            const st = String(m.status || m.Status || '').trim().toLowerCase();  
-            return (  
-              st === "ag. integração/treinamento" ||  
-              st === "ag. integracao/treinamento" ||  
-              st === "não compareceu" ||  
-              st === "nao compareceu" ||  
-              st === "sem vagas hub" ||  
-              st === "ag. first trip" ||  
-              st === "first trip em atraso" ||  
-              st === "first trip efetuada" ||   
-              st === "efetuada" ||            
-              st === ""  
-            );  
-          }).length}  
-        </span>  
-        <span className="text-sm font-bold text-purple-600 dark:text-purple-400">  
-          / {totalLeads > 0   
-            ? ((dadosEfetivos.filter(m => {  
-                const st = String(m.status || m.Status || '').trim().toLowerCase();  
-                return (  
-                  st === "ag. integração/treinamento" ||  
-                  st === "ag. integracao/treinamento" ||  
-                  st === "não compareceu" ||  
-                  st === "nao compareceu" ||  
-                  st === "ag. first trip" ||  
-                  st === "first trip em atraso" ||  
-                  st === "sem vagas hub" ||  
-                  st === "first trip efetuada" || 
-                  st === "efetuada" ||            
-                  st === ""  
-                );  
-              }).length / totalLeads) * 100).toFixed(1)   
-            : "0.0"}%  
-        </span>  
-      </h3>  
-    </div>  
-  </div>
-
-</div>
-
-{/* INDICADORES ABSOLUTOS - SEGUNDA LINHA */}  
-<div className="grid grid-cols-1 md:grid-cols-3 gap-4">  
-
-  {/* CARD 4: TOTAL LEADS QUE COMPARECERAM AO TREINAMENTO (MOVIDO DA PRIMEIRA LINHA) */}
-  <div className={`p-5 rounded-2xl border flex items-center gap-4 ${estilo.card}`}>  
-    <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500">  
-      <Calendar className="w-5 h-5" />  
-    </div>  
-    <div>  
-      <p className="text-[13px] font-bold uppercase tracking-wider text-[#0046B5] dark:text-blue-700">  
-        Total LEADS QUE COMPARECERAM AO TREINAMENTO  
-      </p>  
-      <h3 className="text-2xl font-black mt-0.5 tracking-tight flex items-baseline gap-2">  
-        <span className="text-black dark:text-black">  
-          {dadosEfetivos.filter(m => {  
-            const st = String(m.status || m.Status || '').trim().toLowerCase();  
-            return (  
-              st === "first trip efetuada" ||   
-              st === "efetuada" ||  
-              st === "ag. first trip" ||   
-              st === "first trip em atraso" ||   
-              st === "atraso" ||  
-              st === ""  
-            );  
-          }).length}  
-        </span>  
-        <span className="text-sm font-bold text-blue-500">  
-          / {(() => {  
-            const totalAgendados = dadosEfetivos.filter(m => {  
-              const st = String(m.status || m.Status || '').trim().toLowerCase();  
-              return (  
-                st === "ag. integração/treinamento" ||   
-                st === "ag. integracao/treinamento" ||   
-                st === "não compareceu" ||   
-                st === "nao compareceu" ||   
-                st === "sem vagas hub" ||   
-                st === "ag. first trip" ||  
-                st === "first trip em atraso" ||  
-                st === "first trip efetuada" ||  
-                st === "efetuada" ||  
-                st === ""  
-              );  
-            }).length;  
-
-            const compareceram = dadosEfetivos.filter(m => {  
-              const st = String(m.status || m.Status || '').trim().toLowerCase();  
-              return (  
-                st === "first trip efetuada" ||   
-                st === "efetuada" ||  
-                st === "ag. first trip" ||   
-                st === "first trip em atraso" ||   
-                st === "atraso" ||  
-                st === ""  
-              );  
-            }).length;  
-
-            return totalAgendados > 0 ? ((compareceram / totalAgendados) * 100).toFixed(1) : "0.0";  
-          })()}%  
-        </span>  
-      </h3>  
-    </div>  
-  </div>
-
-  {/* CARD 5: TOTAL FIRST TRIP EFETUADA */}
-  <div className={`p-5 rounded-2xl border flex items-center gap-4 ${estilo.card}`}>            
-    <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500">    
-      <CheckCircle className="w-5 h-5" />    
-    </div>    
-    <div>    
-      <p className="text-[13px] font-bold uppercase tracking-wider text-[#0046B5] dark:text-blue-700">    
-        Total First Trip Efetuada / (% conversão com base no total de disparos respondidos)    
-      </p>    
-      <h3 className="text-2xl font-black mt-0.5 tracking-tight flex items-baseline gap-2">    
-        <span>{totalFirstTrip}</span>    
-        <span className="text-2xl font-bold text-emerald-500">
-          / {totalLeads > 0 ? ((totalFirstTrip / totalLeads) * 100).toFixed(1) : "0.0"}%
-        </span>    
-      </h3>    
-    </div>    
-  </div>
-
-{/* CARD 6: MÉDIA DE ATENDIMENTOS POR DIA POR ANALISTA */}  
-<div className={`p-5 rounded-2xl border flex items-center gap-4 ${estilo.card}`}>  
-  <div className="p-3 rounded-xl bg-red-500/10 text-red-500">  
-    <FilterX className="w-5 h-5" />  
-  </div>  
+              <h3 className="text-2xl font-black mt-0.5 tracking-tight flex items-baseline gap-2">  
+                <span className="text-black dark:text-black">  
+                  {Number(disparosRealizados || 0).toLocaleString("pt-BR")}  
+                </span>  
+              </h3>  
+            </div>  
+          </div>  
   
-  <div>  
-    <p className="text-[13px] font-bold uppercase tracking-wider text-[#D44125] dark:text-red-600">  
-      MÉDIA ATENDIMENTOS POR DIA E ANALISTA  
-    </p>  
+          {/* CARD 2: TOTAL DE LEADS QUE RESPONDERAM */}  
+          <div className={`p-5 rounded-2xl border flex items-center gap-4 ${estilo.card}`}>  
+            <div className="p-3 rounded-xl bg-orange-500/10 text-orange-500">  
+              <Users className="w-5 h-5" />  
+            </div>  
+            <div>  
+              <p className="text-[13px] font-bold uppercase tracking-wider text-[#18181b] dark:text-blue-700">  
+                Total de Leads que Responderam ao disparo  
+              </p>  
+              <h3 className="text-2xl font-black mt-0.5 tracking-tight flex items-baseline gap-2">  
+                <span className="text-black dark:text-black">{totalLeads}</span>  
+                <span className="text-sm font-bold text-orange-500">/ {pctTotalLeads.toFixed(1)}%</span>  
+              </h3>  
+            </div>  
+          </div>  
   
-    <h3 className="text-2xl font-black mt-0.5 tracking-tight flex items-baseline gap-2">  
-      <span>  
-        {(() => {  
-          if (!Array.isArray(dadosEfetivos) || dadosEfetivos.length === 0) return "0,0";  
-  
-          const TOTAL_ANALISTAS = 8;  
-  
-          const normalizar = (txt: string | null | undefined) =>
-            String(txt || "")  
-              .toLowerCase()  
-              .normalize("NFD")  
-              .replace(/[\u0300-\u036f]/g, "")  
-              .trim();  
-  
-          const primeiroItem = dadosEfetivos[0] || {};  
-          const chaves = Object.keys(primeiroItem);  
-  
-          const chaveData =  
-            chaves.find((k) =>  
-              [  
-                "data",  
-                "date",  
-                "dia",  
-                "created_at",  
-                "created at",  
-                "data atendimento",  
-                "data_atendimento",  
-                "dt_atendimento",  
-                "dt atendimento",  
-              ].includes(normalizar(k))  
-            ) ||  
-            chaves.find((k) => {  
-              const nk = normalizar(k);  
-              return (  
-                nk.includes("data") ||  
-                nk.includes("date") ||  
-                nk.includes("dia") ||  
-                nk.includes("created")  
-              );  
-            });  
-  
-          const totalAtendimentos = dadosEfetivos.length;  
-  
-          const semanasUnicas = chaveData  
-            ? [  
-                ...new Set(  
-                  dadosEfetivos  
-                    .map((m) => {  
-                      const valor = m?.[chaveData];  
-                      if (!valor) return "";  
-  
-                      const d = new Date(valor);  
-                      if (isNaN(d.getTime())) return "";  
-  
-                      const inicioAno = new Date(d.getFullYear(), 0, 1);  
-                      const diffDias = Math.floor(  
-                        (d.getTime() - inicioAno.getTime()) / (1000 * 60 * 60 * 24)  
+          {/* CARD 3: TOTAL DE TREINAMENTOS AGENDADOS */}  
+          <div className={`p-5 rounded-2xl border flex items-center gap-4 ${estilo.card}`}>  
+            <div className="p-3 rounded-xl bg-purple-500/10 text-purple-500">  
+              <Activity className="w-5 h-5" />  
+            </div>  
+            <div>  
+              <p className="text-[13px] font-bold uppercase tracking-wider text-[#0046B5] dark:text-blue-700">  
+                Total de TREINAMENTOS AGENDADOS  
+              </p>  
+              <h3 className="text-2xl font-black mt-0.5 tracking-tight flex items-baseline gap-2">  
+                <span className="text-black dark:text-black">  
+                  {dadosEfetivos.filter(m => {  
+                    const st = String(m.status || m.Status || '').trim().toLowerCase();  
+                    return (  
+                      st === "ag. integração/treinamento" ||  
+                      st === "ag. integracao/treinamento" ||  
+                      st === "não compareceu" ||  
+                      st === "nao compareceu" ||  
+                      st === "sem vagas hub" ||  
+                      st === "ag. first trip" ||  
+                      st === "first trip em atraso" ||  
+                      st === "first trip efetuada" ||  
+                      st === "efetuada" ||  
+                      st === ""  
+                    );  
+                  }).length}  
+                </span>  
+                <span className="text-sm font-bold text-purple-600 dark:text-purple-400">  
+                  / {totalLeads > 0  
+                    ? ((dadosEfetivos.filter(m => {  
+                      const st = String(m.status || m.Status || '').trim().toLowerCase();  
+                      return (  
+                        st === "ag. integração/treinamento" ||  
+                        st === "ag. integracao/treinamento" ||  
+                        st === "não compareceu" ||  
+                        st === "nao compareceu" ||  
+                        st === "ag. first trip" ||  
+                        st === "first trip em atraso" ||  
+                        st === "sem vagas hub" ||  
+                        st === "first trip efetuada" ||  
+                        st === "efetuada" ||  
+                        st === ""  
                       );  
-                      const semana = Math.ceil((diffDias + inicioAno.getDay() + 1) / 7);
+                    }).length / totalLeads) * 100).toFixed(1)  
+                    : "0.0"}%  
+                </span>  
+              </h3>  
+            </div>  
+          </div>  
+        </div>  
   
-                      return `${d.getFullYear()}-${semana}`;  
-                    })  
-                    .filter(Boolean)  
-                ),  
-              ].length  
-            : 0;  
+        {/* INDICADORES ABSOLUTOS - SEGUNDA LINHA */}  
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">  
   
-          const totalDias = semanasUnicas * 7;  
+          {/* CARD 4 */}  
+          <div className={`p-5 rounded-2xl border flex items-center gap-4 ${estilo.card}`}>  
+            <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500">  
+              <Calendar className="w-5 h-5" />  
+            </div>  
+            <div>  
+              <p className="text-[13px] font-bold uppercase tracking-wider text-[#0046B5] dark:text-blue-700">  
+                Total LEADS QUE COMPARECERAM AO TREINAMENTO  
+              </p>  
+              <h3 className="text-2xl font-black mt-0.5 tracking-tight flex items-baseline gap-2">  
+                <span className="text-black dark:text-black">  
+                  {dadosEfetivos.filter(m => {  
+                    const st = String(m.status || m.Status || '').trim().toLowerCase();  
+                    return (  
+                      st === "first trip efetuada" ||  
+                      st === "efetuada" ||  
+                      st === "ag. first trip" ||  
+                      st === "first trip em atraso" ||  
+                      st === "atraso" ||  
+                      st === ""  
+                    );  
+                  }).length}  
+                </span>  
+                <span className="text-sm font-bold text-blue-500">  
+                  / {(() => {  
+                    const totalAgendados = dadosEfetivos.filter(m => {  
+                      const st = String(m.status || m.Status || '').trim().toLowerCase();  
+                      return (  
+                        st === "ag. integração/treinamento" ||  
+                        st === "ag. integracao/treinamento" ||  
+                        st === "não compareceu" ||  
+                        st === "nao compareceu" ||  
+                        st === "sem vagas hub" ||  
+                        st === "ag. first trip" ||  
+                        st === "first trip em atraso" ||  
+                        st === "first trip efetuada" ||  
+                        st === "efetuada" ||  
+                        st === ""  
+                      );  
+                    }).length;  
   
-          const media =  
-            totalDias > 0 && TOTAL_ANALISTAS > 0  
-              ? totalAtendimentos / totalDias / TOTAL_ANALISTAS  
-              : 0;  
+                    const compareceram = dadosEfetivos.filter(m => {  
+                      const st = String(m.status || m.Status || '').trim().toLowerCase();  
+                      return (  
+                        st === "first trip efetuada" ||  
+                        st === "efetuada" ||  
+                        st === "ag. first trip" ||  
+                        st === "first trip em atraso" ||  
+                        st === "atraso" ||  
+                        st === ""  
+                      );  
+                    }).length;  
   
-          return media.toFixed(1).replace(".", ",");  
-        })()}  
-      </span>  
+                    return totalAgendados > 0 ? ((compareceram / totalAgendados) * 100).toFixed(1) : "0.0";  
+                  })()}%  
+                </span>  
+              </h3>  
+            </div>  
+          </div>  
   
-      <span className="text-sm font-bold text-blue-500">  
-        por dia / analista  
-      </span>  
-    </h3>  
-  </div>  
-</div>
-
-</div>
-
+          {/* CARD 5 */}  
+          <div className={`p-5 rounded-2xl border flex items-center gap-4 ${estilo.card}`}>  
+            <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500">  
+              <CheckCircle className="w-5 h-5" />  
+            </div>  
+            <div>  
+              <p className="text-[13px] font-bold uppercase tracking-wider text-[#0046B5] dark:text-blue-700">  
+                Total First Trip Efetuada / (% conversão com base no total de disparos respondidos)  
+              </p>  
+              <h3 className="text-2xl font-black mt-0.5 tracking-tight flex items-baseline gap-2">  
+                <span>{totalFirstTrip}</span>  
+                <span className="text-2xl font-bold text-emerald-500">  
+                  / {totalLeads > 0 ? ((totalFirstTrip / totalLeads) * 100).toFixed(1) : "0.0"}%  
+                </span>  
+              </h3>  
+            </div>  
+          </div>  
+  
+          {/* CARD 6 */}  
+          <div className={`p-5 rounded-2xl border flex items-center gap-4 ${estilo.card}`}>  
+            <div className="p-3 rounded-xl bg-red-500/10 text-red-500">  
+              <FilterX className="w-5 h-5" />  
+            </div>  
+  
+            <div>  
+              <p className="text-[13px] font-bold uppercase tracking-wider text-[#D44125] dark:text-red-600">  
+                MÉDIA ATENDIMENTOS POR DIA, POR ANALISTA  
+              </p>  
+  
+              <h3 className="text-2xl font-black mt-0.5 tracking-tight flex items-baseline gap-2">  
+                <span>  
+                  {(() => {  
+                    if (!Array.isArray(dadosEfetivos) || dadosEfetivos.length === 0) return "0,0";  
+  
+                    const TOTAL_ANALISTAS = 7;  
+  
+                    const normalizar = (txt: string | null | undefined) =>  
+                      String(txt || "")  
+                        .toLowerCase()  
+                        .normalize("NFD")  
+                        .replace(/[\u0300-\u036f]/g, "")  
+                        .trim();  
+  
+                    const primeiroItem = dadosEfetivos[0] || {};  
+                    const chaves = Object.keys(primeiroItem);  
+  
+                    const chaveData =  
+                      chaves.find((k) =>  
+                        [  
+                          "data",  
+                          "date",  
+                          "dia",  
+                          "created_at",  
+                          "created at",  
+                          "data atendimento",  
+                          "data_atendimento",  
+                          "dt_atendimento",  
+                          "dt atendimento",  
+                        ].includes(normalizar(k))  
+                      ) ||  
+                      chaves.find((k) => {  
+                        const nk = normalizar(k);  
+                        return (  
+                          nk.includes("data") ||  
+                          nk.includes("date") ||  
+                          nk.includes("dia") ||  
+                          nk.includes("created")  
+                        );  
+                      });  
+  
+                    const totalAtendimentos = dadosEfetivos.length;  
+  
+                    const semanasUnicas = chaveData  
+                      ? [  
+                        ...new Set(  
+                          dadosEfetivos  
+                            .map((m) => {  
+                              const valor = m?.[chaveData];  
+                              if (!valor) return "";  
+  
+                              const d = new Date(valor);  
+                              if (isNaN(d.getTime())) return "";  
+  
+                              const inicioAno = new Date(d.getFullYear(), 0, 1);  
+                              const diffDias = Math.floor(  
+                                (d.getTime() - inicioAno.getTime()) / (1000 * 60 * 60 * 24)  
+                              );  
+                              const semana = Math.ceil((diffDias + inicioAno.getDay() + 1) / 7);  
+  
+                              return `${d.getFullYear()}-${semana}`;  
+                            })  
+                            .filter(Boolean)  
+                        ),  
+                      ].length  
+                      : 0;  
+  
+                    const totalDias = semanasUnicas * 7;  
+  
+                    const media =  
+                      totalDias > 0 && TOTAL_ANALISTAS > 0  
+                        ? totalAtendimentos / totalDias / TOTAL_ANALISTAS  
+                        : 0;  
+  
+                    return media.toFixed(1).replace(".", ",");  
+                  })()}  
+                </span>  
+  
+                <span className="text-sm font-bold text-blue-500">  
+                  por dia / analista  
+                </span>  
+              </h3>  
+            </div>  
+          </div>  
+        </div>  
+  
         {/* METRICS PERCENTUAIS & PERFORMANCE POR ANALISTA */}  
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">  
           <div className="xl:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 w-full">  
@@ -838,8 +846,8 @@ export default function Dashboard({
             </div>  
           </div>  
   
-       {/* CARD 3: RANKING DE FIRST TRIP EFETUADA POR ANALISTA */}
-       <div className={`p-5 rounded-2xl border flex flex-col justify-between h-[310px] print:h-auto ${estilo.card}`}>  
+          {/* CARD 3: RANKING DE FIRST TRIP EFETUADA POR ANALISTA */}  
+          <div className={`p-5 rounded-2xl border flex flex-col justify-between h-[310px] print:h-auto ${estilo.card}`}>  
             <div className="w-full">  
               <div className="flex items-center gap-2 text-orange-500 mb-3">  
                 <BarChart3 className="w-6 h-6 text-emerald-500" />  
@@ -857,8 +865,11 @@ export default function Dashboard({
                       const st = String(m?.status || m?.Status || '').trim().toLowerCase();  
                       if (st === "first trip efetuada" || st.includes("first trip efetuada") || st === "efetuada") {  
                         const nomeAnalista = String(m?.analyst || m?.analista || m?.Analyst || m?.Analista || 'Não Informado').trim();  
-                        contagem[nomeAnalista] = (contagem[nomeAnalista] || 0) + 1;  
-                        totalGeralFT++;  
+  
+                        if (!analistaEstaOculto(nomeAnalista)) {  
+                          contagem[nomeAnalista] = (contagem[nomeAnalista] || 0) + 1;  
+                          totalGeralFT++;  
+                        }  
                       }  
                     });  
                   }  
@@ -893,380 +904,349 @@ export default function Dashboard({
               </div>  
             </div>  
           </div>  
-        </div> 
+        </div>  
   
-{/* FUNIL & EVOLUÇÃO */}  
-<div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">    
-         
-         {/* Card 1: Funil Operacional */}  
-         <div className={`p-5 rounded-3xl border h-[480px] lg:col-span-1 flex flex-col justify-between ${estilo.card}`}>           {(() => {  
-             const tLeads = totalLeads || 0;  
-   
-             const tAgendados = dadosEfetivos.filter(m => {    
-               const st = String(m.status || m.Status || '').trim().toLowerCase();    
-               return (    
-                 st === "ag. integração/treinamento" ||     
-                 st === "ag. integracao/treinamento" ||     
-                 st === "não compareceu" ||     
-                 st === "nao compareceu" ||     
-                 st === "sem vagas hub" ||   
-                 st === "ag. first trip" ||   
-                 st === "first trip em atraso" ||  
-                 st === "first trip efetuada" ||  
-                 st === ""    
-               );    
-             }).length;    
-   
-             const tCompareceram = dadosEfetivos.filter(m => {    
-               const st = String(m.status || m.Status || '').trim().toLowerCase();    
-               return (    
-                 st === "first trip efetuada" ||     
-                 st === "efetuada" ||    
-                 st === "ag. first trip" ||     
-                 st === "first trip em atraso" ||     
-                 st === "atraso" ||    
-                 st === ""    
-               );    
-             }).length;    
-   
-             const tFirstTrip = totalFirstTrip || 0;
- 
-             const somaValores = tAgendados + tCompareceram + tFirstTrip;
-             const circumference = 138.23; 
-             
-             const fAgendados = somaValores > 0 ? (tAgendados / somaValores) * circumference : circumference / 3;
-             const fCompareceram = somaValores > 0 ? (tCompareceram / somaValores) * circumference : circumference / 3;
-             const fFirstTrip = somaValores > 0 ? (tFirstTrip / somaValores) * circumference : circumference / 3;
- 
-             const oAgendados = 0;
-             const oCompareceram = fAgendados;
-             const oFirstTrip = fAgendados + fCompareceram;
- 
-             const obterCentroGomo = (offsetAcumulado: number, tamanhoFatia: number) => {
-               if (somaValores === 0) return { x: 32, y: 32 };
-               const pctMeio = ((offsetAcumulado + tamanhoFatia / 2) / circumference) * 100;
-               const anguloRad = ((pctMeio * 3.6 - 90) * Math.PI) / 180;
-               return {
-                 x: (32 + 22 * Math.cos(anguloRad)).toFixed(1),
-                 y: (32 + 22 * Math.sin(anguloRad)).toFixed(1)
-               };
-             };
- 
-             const txtAgendados = obterCentroGomo(oAgendados, fAgendados);
-             const txtCompareceram = obterCentroGomo(oCompareceram, fCompareceram);
-             const txtFirstTrip = obterCentroGomo(oFirstTrip, fFirstTrip);
-   
-             return (  
-               <div className="space-y-4 flex-1 flex flex-col">  
-                   
-                 <div className="flex items-center gap-2 text-[#0046B5] dark:text-black-400">    
-                   <BarChart3 className="w-5 h-5" />    
-                   <h4 className="text-xs font-black uppercase tracking-wider">Funil Operacional</h4>    
-                 </div>    
-       
-                 <div className="flex flex-col items-center justify-center flex-1 pt-2 gap-6">  
-                     
-                   <div className="relative w-48 h-48 flex items-center justify-center filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.12)]">  
-                     <svg className="w-full h-full" viewBox="0 0 64 64">
-                       
-                       {tAgendados > 0 && (
-                         <circle cx="32" cy="32" r="22" fill="transparent" stroke="#a855f7" strokeWidth="11"
-                           strokeDasharray={`${fAgendados} ${circumference}`} strokeDashoffset={`-${oAgendados}`}
-                           className="transform -rotate-90 origin-center" />
-                       )}
-                       
-                       {tCompareceram > 0 && (
-                         <circle cx="32" cy="32" r="22" fill="transparent" stroke="#3b82f6" strokeWidth="11"
-                           strokeDasharray={`${fCompareceram} ${circumference}`} strokeDashoffset={`-${oCompareceram}`}
-                           className="transform -rotate-90 origin-center" />
-                       )}
-                       
-                       {tFirstTrip > 0 && (
-                         <circle cx="32" cy="32" r="22" fill="transparent" stroke="#10b981" strokeWidth="11"
-                           strokeDasharray={`${fFirstTrip} ${circumference}`} strokeDashoffset={`-${oFirstTrip}`}
-                           className="transform -rotate-90 origin-center" />
-                       )}
- 
-                       {tAgendados > 0 && fAgendados > 10 && (
-                         <text x={txtAgendados.x} y={txtAgendados.y} fill="#ffffff" fontSize="3.5" fontWeight="900" textAnchor="middle" dominantBaseline="central" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
-                           {tAgendados}
-                         </text>
-                       )}
- 
-                       {tCompareceram > 0 && fCompareceram > 10 && (
-                         <text x={txtCompareceram.x} y={txtCompareceram.y} fill="#ffffff" fontSize="3.5" fontWeight="900" textAnchor="middle" dominantBaseline="central" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
-                           {tCompareceram}
-                         </text>
-                       )}
- 
-                       {tFirstTrip > 0 && fFirstTrip > 10 && (
-                         <text x={txtFirstTrip.x} y={txtFirstTrip.y} fill="#ffffff" fontSize="3.5" fontWeight="900" textAnchor="middle" dominantBaseline="central" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
-                           {tFirstTrip}
-                         </text>
-                       )}
-                     </svg>
- 
-                     <div className="absolute w-20 h-20 rounded-full flex flex-col items-center justify-center bg-white dark:bg-zinc-950 shadow-md border border-zinc-500/10">  
-                       <span className="text-xl font-black text-[#0046B5] dark:text-blue-400">  
-                         {tLeads}  
-                       </span>  
-                       <p className="text-[8px] uppercase tracking-wider text-zinc-400 font-black">Total Leads</p>  
-                     </div>  
-                   </div>  
-   
-                   <div className="w-full space-y-2.5">  
-                       
-                     <div className="flex items-center justify-between text-xs font-bold border-b border-zinc-500/10 pb-1.5">  
-                       <div className="flex items-center gap-2">  
-                         <span className="w-2.5 h-2.5 rounded-full bg-orange-500 shrink-0" />  
-                         <span className={estilo.textoSecundario}>1 Resposta Leads</span>  
-                       </div>  
-                       <span className="font-black text-black-800 dark:text-black-200">{tLeads} un</span>  
-                     </div>  
-   
-                     <div className="flex items-center justify-between text-xs font-bold border-b border-zinc-500/10 pb-1.5">  
-                       <div className="flex items-center gap-2">  
-                         <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />  
-                         <span className={estilo.textoSecundario}>2 Leads Agendados</span>  
-                       </div>  
-                       <span className="font-black text-zinc-800 dark:text-black-200">{tAgendados} un</span>  
-                     </div>  
-   
-                     <div className="flex items-center justify-between text-xs font-bold border-b border-zinc-500/10 pb-1.5">  
-                       <div className="flex items-center gap-2">  
-                         <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />  
-                         <span className={estilo.textoSecundario}>3 Compareceram</span>  
-                       </div>  
-                       <span className="font-black text-zinc-800 dark:text-black-200">{tCompareceram} un</span>  
-                     </div>  
-   
-                     <div className="flex items-center justify-between text-xs font-bold pb-0.5">  
-                       <div className="flex items-center gap-2">  
-                         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />  
-                         <span className={estilo.textoSecundario}>4 First Trip Efetuada</span>  
-                       </div>  
-                       <span className="font-black text-zinc-800 dark:text-black-200">{tFirstTrip} un</span>  
-                     </div>  
-   
-                   </div>  
-                 </div>  
-               </div>  
-             );  
-           })()}  
-         </div>
-
-{/* 2: Evolução de Respostas por Semana */}  
-<div className={`p-5 rounded-2xl border h-full flex flex-col justify-between lg:col-span-3 ${estilo.card}`}>  
-  <div className="space-y-8 flex-1 flex flex-col w-full">  
-    
-    {/* TÍTULO CENTRALIZADO */}
-    <div className="flex items-center gap-2 justify-center w-full border-b pb-3 border-zinc-100 dark:border-zinc-1000">  
-      <TrendingUp className="w-5 h-5 text-[#0046B5] dark:text-blue-400" />  
-      <h4 className="text-l font-black uppercase tracking-wider text-[#0046B5] dark:text-black-400 text-center">  
-        Evolução de Respostas por Semana  
-      </h4>  
-    </div>  
-    
-    {/* ÁREA DE CONVENÇÃO DO GRÁFICO COM SCROLL HORIZONTAL PREVENTIVO */}
-    <div className="w-full overflow-x-auto pb-4 pt-4">
-      <div className="flex items-end justify-center gap-4 sm:gap-6 min-w-max px-4 h70">  
-      {semanasOrdenadas.length > 0 ? (  
-  [...semanasOrdenadas]  
-    .filter((sem) => {  
-      const nome = String(sem?.name || "").trim();  
+        {/* FUNIL & EVOLUÇÃO */}  
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">  
   
-      // Extrai o número da semana do texto, ex: "Semana 27"  
-      const match = nome.match(/\d+/);  
-      const numeroSemana = match ? Number(match[0]) : null;  
+          {/* Card 1: Funil Operacional */}  
+          <div className={`p-5 rounded-3xl border h-[480px] lg:col-span-1 flex flex-col justify-between ${estilo.card}`}>  
+            {(() => {  
+              const tLeads = totalLeads || 0;  
   
-      if (!numeroSemana) return true; // se não achar número, mantém  
+              const tAgendados = dadosEfetivos.filter(m => {  
+                const st = String(m.status || m.Status || '').trim().toLowerCase();  
+                return (  
+                  st === "ag. integração/treinamento" ||  
+                  st === "ag. integracao/treinamento" ||  
+                  st === "não compareceu" ||  
+                  st === "nao compareceu" ||  
+                  st === "sem vagas hub" ||  
+                  st === "ag. first trip" ||  
+                  st === "first trip em atraso" ||  
+                  st === "first trip efetuada" ||  
+                  st === ""  
+                );  
+              }).length;  
   
-      // Semana atual do ano  
-      const hoje = new Date();  
-      const inicioAno = new Date(hoje.getFullYear(), 0, 1);  
-      const diffDias = Math.floor(  
-        (hoje.getTime() - inicioAno.getTime()) / (1000 * 60 * 60 * 24)  
-      );  
-      const semanaAtual = Math.ceil((diffDias + inicioAno.getDay() + 1) / 7);  
+              const tCompareceram = dadosEfetivos.filter(m => {  
+                const st = String(m.status || m.Status || '').trim().toLowerCase();  
+                return (  
+                  st === "first trip efetuada" ||  
+                  st === "efetuada" ||  
+                  st === "ag. first trip" ||  
+                  st === "first trip em atraso" ||  
+                  st === "atraso" ||  
+                  st === ""  
+                );  
+              }).length;  
   
-      // Remove semanas futuras  
-      return numeroSemana <= semanaAtual;  
-    })  
-    .sort((a, b) => {  
-      const semanaA = Number(String(a?.name || "").match(/\d+/)?.[0] || 0);  
-      const semanaB = Number(String(b?.name || "").match(/\d+/)?.[0] || 0);  
+              const tFirstTrip = totalFirstTrip || 0;  
   
-      // Ordena da mais recente para a mais antiga  
-      return semanaB - semanaA;  
-    })  
-    .map((sem, idx) => {
-              const porcentagem = totalLeads > 0 ? (sem.total / totalLeads) * 100 : 0;
-
-              return (
-                <div key={idx} className="flex flex-col items-center w-16 sm:w-20 justify-end group">  
-                  {/* Informações numéricas (Topo da barra) */}
-                  <div className="mb-2 text-center flex flex-col items-center justify-end h-10 shrink-0">
-                    <span className="text-[15px] font-black text-black-1800 dark:text-black-100 whitespace-nowrap">
-                      {sem.total}
-                    </span>
-                    <span className="text-[13px] font-bold text-orange-400">
-                      {porcentagem.toFixed(1)}%
-                    </span>
-                  </div>
-
-                 {/* A Barra Vertical Estilo Shopee (Cápsula Arredondada) */}  
-<div className="w-8 sm:w-7.5 h-40 rounded-full bg-black-100 dark:bg-blue-300/50 overflow-hidden relative shrink-0 shadow-inner">  
-  <div  
-    className="bg-gradient-to-t from-orange-600 to-orange-500 w-full rounded-full absolute bottom-0 left-0 transition-all duration-500 group-hover:from-orange-500 group-hover:to-orange-400"  
-    style={{  
-      height: `${totalLeads > 0 ? Math.max(18, Math.min(porcentagem * 5.35, 100)) : 18}%`  
-    }}  
-  />  
-</div>
-
-                  {/* Nome da Semana (Abaixo da barra) */}  
-                  <div className="mt-2.5 text-center shrink-0">
-                    <span className="text-[15px] font-black font-mono text-black-500 dark:text-black-400 whitespace-nowrap">
-                      {sem.name}
-                    </span>  
-                  </div>
+              const somaValores = tAgendados + tCompareceram + tFirstTrip;  
+              const circumference = 138.23;  
+  
+              const fAgendados = somaValores > 0 ? (tAgendados / somaValores) * circumference : circumference / 3;  
+              const fCompareceram = somaValores > 0 ? (tCompareceram / somaValores) * circumference : circumference / 3;  
+              const fFirstTrip = somaValores > 0 ? (tFirstTrip / somaValores) * circumference : circumference / 3;  
+  
+              const oAgendados = 0;  
+              const oCompareceram = fAgendados;  
+              const oFirstTrip = fAgendados + fCompareceram;  
+  
+              const obterCentroGomo = (offsetAcumulado: number, tamanhoFatia: number) => {  
+                if (somaValores === 0) return { x: 32, y: 32 };  
+                const pctMeio = ((offsetAcumulado + tamanhoFatia / 2) / circumference) * 100;  
+                const anguloRad = ((pctMeio * 3.6 - 90) * Math.PI) / 180;  
+                return {  
+                  x: (32 + 22 * Math.cos(anguloRad)).toFixed(1),  
+                  y: (32 + 22 * Math.sin(anguloRad)).toFixed(1)  
+                };  
+              };  
+  
+              const txtAgendados = obterCentroGomo(oAgendados, fAgendados);  
+              const txtCompareceram = obterCentroGomo(oCompareceram, fCompareceram);  
+              const txtFirstTrip = obterCentroGomo(oFirstTrip, fFirstTrip);  
+  
+              return (  
+                <div className="space-y-4 flex-1 flex flex-col">  
+                  <div className="flex items-center gap-2 text-[#0046B5] dark:text-black-400">  
+                    <BarChart3 className="w-5 h-5" />  
+                    <h4 className="text-xs font-black uppercase tracking-wider">Funil Operacional</h4>  
+                  </div>  
+  
+                  <div className="flex flex-col items-center justify-center flex-1 pt-2 gap-6">  
+                    <div className="relative w-48 h-48 flex items-center justify-center filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.12)]">  
+                      <svg className="w-full h-full" viewBox="0 0 64 64">  
+                        {tAgendados > 0 && (  
+                          <circle cx="32" cy="32" r="22" fill="transparent" stroke="#a855f7" strokeWidth="11"  
+                            strokeDasharray={`${fAgendados} ${circumference}`} strokeDashoffset={`-${oAgendados}`}  
+                            className="transform -rotate-90 origin-center" />  
+                        )}  
+  
+                        {tCompareceram > 0 && (  
+                          <circle cx="32" cy="32" r="22" fill="transparent" stroke="#3b82f6" strokeWidth="11"  
+                            strokeDasharray={`${fCompareceram} ${circumference}`} strokeDashoffset={`-${oCompareceram}`}  
+                            className="transform -rotate-90 origin-center" />  
+                        )}  
+  
+                        {tFirstTrip > 0 && (  
+                          <circle cx="32" cy="32" r="22" fill="transparent" stroke="#10b981" strokeWidth="11"  
+                            strokeDasharray={`${fFirstTrip} ${circumference}`} strokeDashoffset={`-${oFirstTrip}`}  
+                            className="transform -rotate-90 origin-center" />  
+                        )}  
+  
+                        {tAgendados > 0 && fAgendados > 10 && (  
+                          <text x={txtAgendados.x} y={txtAgendados.y} fill="#ffffff" fontSize="3.5" fontWeight="900" textAnchor="middle" dominantBaseline="central" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">  
+                            {tAgendados}  
+                          </text>  
+                        )}  
+  
+                        {tCompareceram > 0 && fCompareceram > 10 && (  
+                          <text x={txtCompareceram.x} y={txtCompareceram.y} fill="#ffffff" fontSize="3.5" fontWeight="900" textAnchor="middle" dominantBaseline="central" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">  
+                            {tCompareceram}  
+                          </text>  
+                        )}  
+  
+                        {tFirstTrip > 0 && fFirstTrip > 10 && (  
+                          <text x={txtFirstTrip.x} y={txtFirstTrip.y} fill="#ffffff" fontSize="3.5" fontWeight="900" textAnchor="middle" dominantBaseline="central" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">  
+                            {tFirstTrip}  
+                          </text>  
+                        )}  
+                      </svg>  
+  
+                      <div className="absolute w-20 h-20 rounded-full flex flex-col items-center justify-center bg-white dark:bg-zinc-950 shadow-md border border-zinc-500/10">  
+                        <span className="text-xl font-black text-[#0046B5] dark:text-blue-400">  
+                          {tLeads}  
+                        </span>  
+                        <p className="text-[8px] uppercase tracking-wider text-zinc-400 font-black">Total Leads</p>  
+                      </div>  
+                    </div>  
+  
+                    <div className="w-full space-y-2.5">  
+                      <div className="flex items-center justify-between text-xs font-bold border-b border-zinc-500/10 pb-1.5">  
+                        <div className="flex items-center gap-2">  
+                          <span className="w-2.5 h-2.5 rounded-full bg-orange-500 shrink-0" />  
+                          <span className={estilo.textoSecundario}>1 Resposta Leads</span>  
+                        </div>  
+                        <span className="font-black text-black-800 dark:text-black-200">{tLeads} un</span>  
+                      </div>  
+  
+                      <div className="flex items-center justify-between text-xs font-bold border-b border-zinc-500/10 pb-1.5">  
+                        <div className="flex items-center gap-2">  
+                          <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />  
+                          <span className={estilo.textoSecundario}>2 Leads Agendados</span>  
+                        </div>  
+                        <span className="font-black text-zinc-800 dark:text-black-200">{tAgendados} un</span>  
+                      </div>  
+  
+                      <div className="flex items-center justify-between text-xs font-bold border-b border-zinc-500/10 pb-1.5">  
+                        <div className="flex items-center gap-2">  
+                          <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />  
+                          <span className={estilo.textoSecundario}>3 Compareceram</span>  
+                        </div>  
+                        <span className="font-black text-zinc-800 dark:text-black-200">{tCompareceram} un</span>  
+                      </div>  
+  
+                      <div className="flex items-center justify-between text-xs font-bold pb-0.5">  
+                        <div className="flex items-center gap-2">  
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />  
+                          <span className={estilo.textoSecundario}>4 First Trip Efetuada</span>  
+                        </div>  
+                        <span className="font-black text-zinc-800 dark:text-black-200">{tFirstTrip} un</span>  
+                      </div>  
+                    </div>  
+                  </div>  
                 </div>  
-              );
-            })  
-        ) : (  
-          <div className="flex items-center justify-center h-full w-full py-8">
-            <p className="text-xs text-zinc-500 italic text-center">Nenhuma semana localizada.</p>  
-          </div>
-        )}  
-      </div>  
-    </div>
-  </div>
-</div>
-
-
-
-
-</div>
-
-{/* DISTRIBUIÇÃO MODAIS E HUBS */}
-<div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch w-full mt-6">
-
-{/* Card 3: Respostas por Modal */}
-<div className={`p-5 rounded-3xl border flex flex-col justify-between lg:col-span-1 ${estilo.card}`}>
-  <div className="space-y-10">
-    <h4 className="text-sm font-black uppercase tracking-wider flex items-center gap-2 text-[#FF5722]">
-      📊 Respostas por Modal
-    </h4>
-    <div className="space-y-8">
-      {(() => {
-        // Filtrar apenas os modais com base na quantidade
-        const modaisFiltrados = modaisPagina2.filter(modal => modal.qtd > 0); // Ajuste a condição conforme necessário
-
-        if (!modaisFiltrados || modaisFiltrados.length === 0) {
-          return <p className="text-xs italic text-black-500">Nenhum modal encontrado.</p>;
-        }
-
-        const totalGeralModais = modaisFiltrados.reduce((acc, curr) => acc + (curr.qtd || 0), 0);
-
-        const coresShopee = [
-          "bg-[#FF5722]", 
-          "bg-[#FF7A45]", 
-          "bg-[#FFA366]", 
-          "bg-[#FFB88C]", 
-          "bg-zinc-500",   
-        ];
-
-        const modaisOrdenados = [...modaisFiltrados].sort((a, b) => b.qtd - a.qtd);
-
-        return modaisOrdenados.map((modal, i) => {
-          const pctReal = totalGeralModais > 0 ? (modal.qtd / totalGeralModais) * 100 : 0;
-          const corBarra = coresShopee[i % coresShopee.length];
-
-          return (
-            <div key={i} className="space-y-1">
-              <div className="flex justify-between text-xs font-bold">
-                <span className="uppercase text-[13px] text-black-800 dark:text-black-200">{modal.name}</span>
-                <span className="text-blue-700 dark:text-blue-600">
-                  {modal.qtd} un <span className="text-[#FF5722]">({pctReal.toFixed(1)}%)</span>
-                </span>
-              </div>
-              <div className={`w-full h-2 rounded-full overflow-hidden ${estilo.barraFundo}`}>
-                <div className={`${corBarra} h-full rounded-full`} style={{ width: `${pctReal}%` }} />
-              </div>
-            </div>
-          );
-        });
-      })()}
-    </div>
-  </div>
-</div>
-
-
- {/* Card 4: Respostas por HUB */}
-<div className={`p-5 rounded-3xl border flex flex-col justify-between lg:col-span-3 ${estilo.card}`}>  
-  <div className="space-y-4 flex-1 flex flex-col justify-between h-full">
-    
-    {/* Título Centralizado */}
-    <h4 className="text-l font-black uppercase tracking-wider flex items-center justify-center gap-2 text-[#FF5722] text-center w-full">  
-      📍 Respostas por HUB  
-    </h4>  
-
-    {/* ÁREA DO GRÁFICO VERTICAL */}
-    <div className="w-full overflow-x-auto pb-2 pt-4">
-      <div className="flex items-end justify-start sm:justify-center gap-4 sm:gap-6 min-w-max px-4 h-56">  
-        {hubsOrdenados && hubsOrdenados.length > 0 ? (  
-          hubsOrdenados.map((hub, i) => {
-            return (  
-              <div key={i} className="flex flex-col items-center w-16 sm:w-20 justify-end group">  
-                
-                {/* Informações numéricas (Topo da barra) */}
-                <div className="mb-2 text-center flex flex-col items-center justify-end h-10 shrink-0">
-                  {/* Número em Preto */}
-                  <span className="text-[15px] font-black text-black dark:text-black whitespace-nowrap">
-                    {hub.qtd}
-                  </span>
-                  {/* Porcentagem em Laranja Escuro */}
-                  <span className="text-[13px] font-bold text-orange-600 dark:text-orange-500">
-                    {hub.pct.toFixed(0)}%
-                  </span>
-                </div>
-
-                {/* A Barra Vertical */}  
-                <div className={`w-8 sm:w-8 h-36 rounded-full overflow-hidden relative shrink-0 ${estilo.barraFundo} bg-zinc-100 dark:bg-zinc-60/50 shadow-inner`}>  
-                  <div    
-                    className="bg-gradient-to-t from-blue-600 to-blue-500 w-full rounded-full absolute bottom-0 left-0 transition-all duration-500 group-hover:from-blue-500 group-hover:to-blue-400"  
-                    style={{ height: `${hub.pct > 0 ? Math.max(18, Math.min(hub.pct * .35, 100)) : 18}%` }}                  />  
-                </div>  
-
-                {/* Nome do HUB (Abaixo da barra) */}  
-                <div className="mt-2.5 text-center shrink-0 w-full max-w-[1000px] truncate">
-                  <span className="text-[13px] font-bold text-black-600 dark:text-black-800" title={hub.name}>
-                    {hub.name}
-                  </span>  
-                </div>
-
+              );  
+            })()}  
+          </div>  
+  
+          {/* 2: Evolução de Respostas por Semana */}  
+          <div className={`p-5 rounded-2xl border h-full flex flex-col justify-between lg:col-span-3 ${estilo.card}`}>  
+            <div className="space-y-8 flex-1 flex flex-col w-full">  
+  
+              <div className="flex items-center gap-2 justify-center w-full border-b pb-3 border-zinc-100 dark:border-zinc-1000">  
+                <TrendingUp className="w-5 h-5 text-[#0046B5] dark:text-blue-400" />  
+                <h4 className="text-l font-black uppercase tracking-wider text-[#0046B5] dark:text-black-400 text-center">  
+                  Evolução de Respostas por Semana  
+                </h4>  
               </div>  
-            );
-          })  
-        ) : (  
-          <div className="flex items-center justify-center h-full w-full py-8">
-            <p className="text-xs text-zinc-500 italic text-center">Nenhum HUB localizado.</p>  
-          </div>
-        )}  
-      </div>  
-    </div>
-
-  </div>  
-</div>  
-
-</div>
-
-       {/* TABELAS */}  
-       <div className="space-y-4 pt-2">  
+  
+              <div className="w-full overflow-x-auto pb-4 pt-4">  
+                <div className="flex items-end justify-center gap-4 sm:gap-6 min-w-max px-4 h70">  
+                  {semanasOrdenadas.length > 0 ? (  
+                    [...semanasOrdenadas]  
+                      .filter((sem) => {  
+                        const nome = String(sem?.name || "").trim();  
+                        const match = nome.match(/\d+/);  
+                        const numeroSemana = match ? Number(match[0]) : null;  
+                        if (!numeroSemana) return true;  
+  
+                        const hoje = new Date();  
+                        const inicioAno = new Date(hoje.getFullYear(), 0, 1);  
+                        const diffDias = Math.floor(  
+                          (hoje.getTime() - inicioAno.getTime()) / (1000 * 60 * 60 * 24)  
+                        );  
+                        const semanaAtual = Math.ceil((diffDias + inicioAno.getDay() + 1) / 7);  
+  
+                        return numeroSemana <= semanaAtual;  
+                      })  
+                      .sort((a, b) => {  
+                        const semanaA = Number(String(a?.name || "").match(/\d+/)?.[0] || 0);  
+                        const semanaB = Number(String(b?.name || "").match(/\d+/)?.[0] || 0);  
+                        return semanaB - semanaA;  
+                      })  
+                      .map((sem, idx) => {  
+                        const porcentagem = totalLeads > 0 ? (sem.total / totalLeads) * 100 : 0;  
+  
+                        return (  
+                          <div key={idx} className="flex flex-col items-center w-16 sm:w-20 justify-end group">  
+                            <div className="mb-2 text-center flex flex-col items-center justify-end h-10 shrink-0">  
+                              <span className="text-[15px] font-black text-black-1800 dark:text-black-100 whitespace-nowrap">  
+                                {sem.total}  
+                              </span>  
+                              <span className="text-[13px] font-bold text-orange-400">  
+                                {porcentagem.toFixed(1)}%  
+                              </span>  
+                            </div>  
+  
+                            <div className="w-8 sm:w-7.5 h-40 rounded-full bg-black-100 dark:bg-blue-300/50 overflow-hidden relative shrink-0 shadow-inner">  
+                              <div  
+                                className="bg-gradient-to-t from-orange-600 to-orange-500 w-full rounded-full absolute bottom-0 left-0 transition-all duration-500 group-hover:from-orange-500 group-hover:to-orange-400"  
+                                style={{  
+                                  height: `${totalLeads > 0 ? Math.max(18, Math.min(porcentagem * 5.35, 100)) : 18}%`  
+                                }}  
+                              />  
+                            </div>  
+  
+                            <div className="mt-2.5 text-center shrink-0">  
+                              <span className="text-[15px] font-black font-mono text-black-500 dark:text-black-400 whitespace-nowrap">  
+                                {sem.name}  
+                              </span>  
+                            </div>  
+                          </div>  
+                        );  
+                      })  
+                  ) : (  
+                    <div className="flex items-center justify-center h-full w-full py-8">  
+                      <p className="text-xs text-zinc-500 italic text-center">Nenhuma semana localizada.</p>  
+                    </div>  
+                  )}  
+                </div>  
+              </div>  
+            </div>  
+          </div>  
+        </div>  
+  
+        {/* DISTRIBUIÇÃO MODAIS E HUBS */}  
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch w-full mt-6">  
+  
+          {/* Card 3: Respostas por Modal */}  
+          <div className={`p-5 rounded-3xl border flex flex-col justify-between lg:col-span-1 ${estilo.card}`}>  
+            <div className="space-y-10">  
+              <h4 className="text-sm font-black uppercase tracking-wider flex items-center gap-2 text-[#FF5722]">  
+                📊 Respostas por Modal  
+              </h4>  
+              <div className="space-y-8">  
+                {(() => {  
+                  const modaisFiltrados = modaisPagina2.filter(modal => modal.qtd > 0);  
+  
+                  if (!modaisFiltrados || modaisFiltrados.length === 0) {  
+                    return <p className="text-xs italic text-black-500">Nenhum modal encontrado.</p>;  
+                  }  
+  
+                  const totalGeralModais = modaisFiltrados.reduce((acc, curr) => acc + (curr.qtd || 0), 0);  
+  
+                  const coresShopee = [  
+                    "bg-[#FF5722]",  
+                    "bg-[#FF7A45]",  
+                    "bg-[#FFA366]",  
+                    "bg-[#FFB88C]",  
+                    "bg-zinc-500",  
+                  ];  
+  
+                  const modaisOrdenados = [...modaisFiltrados].sort((a, b) => b.qtd - a.qtd);  
+  
+                  return modaisOrdenados.map((modal, i) => {  
+                    const pctReal = totalGeralModais > 0 ? (modal.qtd / totalGeralModais) * 100 : 0;  
+                    const corBarra = coresShopee[i % coresShopee.length];  
+  
+                    return (  
+                      <div key={i} className="space-y-1">  
+                        <div className="flex justify-between text-xs font-bold">  
+                          <span className="uppercase text-[13px] text-black-800 dark:text-black-200">{modal.name}</span>  
+                          <span className="text-blue-700 dark:text-blue-600">  
+                            {modal.qtd} un <span className="text-[#FF5722]">({pctReal.toFixed(1)}%)</span>  
+                          </span>  
+                        </div>  
+                        <div className={`w-full h-2 rounded-full overflow-hidden ${estilo.barraFundo}`}>  
+                          <div className={`${corBarra} h-full rounded-full`} style={{ width: `${pctReal}%` }} />  
+                        </div>  
+                      </div>  
+                    );  
+                  });  
+                })()}  
+              </div>  
+            </div>  
+          </div>  
+  
+          {/* Card 4: Respostas por HUB */}  
+          <div className={`p-5 rounded-3xl border flex flex-col justify-between lg:col-span-3 ${estilo.card}`}>  
+            <div className="space-y-4 flex-1 flex flex-col justify-between h-full">  
+              <h4 className="text-l font-black uppercase tracking-wider flex items-center justify-center gap-2 text-[#FF5722] text-center w-full">  
+                📍 Respostas por HUB  
+              </h4>  
+  
+              <div className="w-full overflow-x-auto pb-2 pt-4">  
+                <div className="flex items-end justify-start sm:justify-center gap-4 sm:gap-6 min-w-max px-4 h-56">  
+                  {hubsOrdenados && hubsOrdenados.length > 0 ? (  
+                    hubsOrdenados.map((hub, i) => {  
+                      return (  
+                        <div key={i} className="flex flex-col items-center w-16 sm:w-20 justify-end group">  
+  
+                          <div className="mb-2 text-center flex flex-col items-center justify-end h-10 shrink-0">  
+                            <span className="text-[15px] font-black text-black dark:text-black whitespace-nowrap">  
+                              {hub.qtd}  
+                            </span>  
+                            <span className="text-[13px] font-bold text-orange-600 dark:text-orange-500">  
+                              {hub.pct.toFixed(0)}%  
+                            </span>  
+                          </div>  
+  
+                          <div className={`w-8 sm:w-8 h-36 rounded-full overflow-hidden relative shrink-0 ${estilo.barraFundo} bg-zinc-100 dark:bg-zinc-60/50 shadow-inner`}>  
+                            <div  
+                              className="bg-gradient-to-t from-blue-600 to-blue-500 w-full rounded-full absolute bottom-0 left-0 transition-all duration-500 group-hover:from-blue-500 group-hover:to-blue-400"  
+                              style={{ height: `${hub.pct > 0 ? Math.max(18, Math.min(hub.pct * .35, 100)) : 18}%` }}  
+                            />  
+                          </div>  
+  
+                          <div className="mt-2.5 text-center shrink-0 w-full max-w-[1000px] truncate">  
+                            <span className="text-[13px] font-bold text-black-600 dark:text-black-800" title={hub.name}>  
+                              {hub.name}  
+                            </span>  
+                          </div>  
+  
+                        </div>  
+                      );  
+                    })  
+                  ) : (  
+                    <div className="flex items-center justify-center h-full w-full py-8">  
+                      <p className="text-xs text-zinc-500 italic text-center">Nenhum HUB localizado.</p>  
+                    </div>  
+                  )}  
+                </div>  
+              </div>  
+            </div>  
+          </div>  
+        </div>  
+  
+        {/* TABELAS */}  
+        <div className="space-y-4 pt-2">  
           <div className="flex items-center gap-2 text-zinc-800 dark:text-zinc-200">  
             <Activity className="w-60 h-5 text-[#EE4D2D]" />  
             <h3 className="text-2xl font-bold text-[#0046B5] dark:text-blue-1000 uppercase tracking-wider">  
-              Métricas Customizadas por Modal e Semana {/* TÍTULO ATUALIZADO */}
+              Métricas Customizadas por Modal e Semana  
             </h3>  
           </div>  
   
@@ -1274,62 +1254,61 @@ export default function Dashboard({
             <div className={`p-4 rounded-2xl border flex flex-col h-[350px] print:h-auto ${estilo.card} border-zinc-200 dark:border-zinc-800`}>  
               <div className="mb-2">  
                 <h4 className="text-[13px] font-bold uppercase tracking-wider text-blue-700">  
-                  RESPOSTAS LEADS POR MODAL E SEMANA {/* TÍTULO ATUALIZADO */}
+                  RESPOSTAS LEADS POR MODAL E SEMANA  
                 </h4>  
               </div>  
               <div className="w-full flex-1 overflow-x-auto overflow-y-auto rounded-xl border border-zinc-200 dark:border-zinc-800 pr-1 scrollbar-thin print:max-h-none print:overflow-visible">  
                 <table className="w-full text-left text-xs border-collapse min-w-[380px]">  
                   <thead className="sticky top-0 z-30">  
-                  <tr className="bg-[#EE4D2D] dark:bg-[#d44022] text-white border-b border-[#EE4D2D]">
-                  <th className="p-2 text-left bg-[#EE4D2D] dark:bg-[#d44022] font-bold text-[10px] tracking-wider sticky left-0 z-40 min-w-[140px] border-r border-white/10">MODAL</th>
-  <th className="p-2 font-bold text-[10px] tracking-wider text-center min-w-[90px] bg-[#EE4D2D] dark:bg-[#d44022]">TOTAL</th>
-  {colunasSemanasUnicas.map((semanaNome, i) => (
-    <th key={i} className="p-2 text-center font-bold text-[10px] tracking-wider min-w-[75px] bg-[#EE4D2D] dark:bg-[#d44022]">{semanaNome.toUpperCase()}</th>
-  ))}
-</tr>
+                    <tr className="bg-[#EE4D2D] dark:bg-[#d44022] text-white border-b border-[#EE4D2D]">  
+                      <th className="p-2 text-left bg-[#EE4D2D] dark:bg-[#d44022] font-bold text-[10px] tracking-wider sticky left-0 z-40 min-w-[140px] border-r border-white/10">MODAL</th>  
+                      <th className="p-2 font-bold text-[10px] tracking-wider text-center min-w-[90px] bg-[#EE4D2D] dark:bg-[#d44022]">TOTAL</th>  
+                      {colunasSemanasUnicas.map((semanaNome, i) => (  
+                        <th key={i} className="p-2 text-center font-bold text-[10px] tracking-wider min-w-[75px] bg-[#EE4D2D] dark:bg-[#d44022]">{semanaNome.toUpperCase()}</th>  
+                      ))}  
+                    </tr>  
                   </thead>  
                   <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 text-[11px] text-zinc-700 dark:text-zinc-300">  
-                  {listaTodosModaisEncontrados.length > 0 ? (
-  listaTodosModaisEncontrados.map((modalNome, idx) => {
-    const totalDoModal = contagemModaisGlobais[modalNome] || 0;
-    const pctGeral = totalLeads > 0 ? (totalDoModal / totalLeads) * 100 : 0;
-
-    return (
-      <tr key={idx} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
-        <td className="p-2 font-semibold flex items-center gap-1.5 truncate sticky left-0 bg-white/95 dark:bg-zinc-950/95 text-white-900 dark:text-white-700 z-20 border-r border-zinc-200 dark:border-zinc-800" title={modalNome}>
-          <span className="truncate">{modalNome}</span>
-        </td>
-        <td className="p-2 text-center font-bold font-mono bg-zinc-500/5 text-[#EE4D2D]">
-          {totalDoModal} <span className="text-zinc-400 dark:text-blue-500 text-[10px] font-normal">({pctGeral.toFixed(0)}%)</span>
-        </td>
-        {colunasSemanasUnicas.map((semanaNome, i) => {
-          const qtdEspecifica = (cruzamentoModalSemana[modalNome] && cruzamentoModalSemana[modalNome][semanaNome]) || 0;
-          const pctEspecifica = totalDoModal > 0 ? (qtdEspecifica / totalDoModal) * 100 : 0;
-
-          return (
-            <td key={i} className="p-2 text-center font-mono text-zinc-700 dark:text-black-300">
-              {qtdEspecifica > 0 ? (
-                <span>
-                  <span className="font-bold">{qtdEspecifica}</span>
-                  <span className="text-zinc-400 dark:text-zinc-500 text-[9px] ml-0.5">({pctEspecifica.toFixed(0)}%)</span>
-                </span>
-              ) : (
-                <span className="text-zinc-300 dark:text-zinc-700">-</span>
-              )}
-            </td>
-          );
-        })}
-      </tr>
-    );
-  })
-) : (
-  <tr>
-    <td colSpan={colunasSemanasUnicas.length + 2} className="p-4 text-center text-zinc-400 italic">
-      Sem registros.
-    </td>
-  </tr>
-)}
+                    {listaTodosModaisEncontrados.length > 0 ? (  
+                      listaTodosModaisEncontrados.map((modalNome, idx) => {  
+                        const totalDoModal = contagemModaisGlobais[modalNome] || 0;  
+                        const pctGeral = totalLeads > 0 ? (totalDoModal / totalLeads) * 100 : 0;  
   
+                        return (  
+                          <tr key={idx} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">  
+                            <td className="p-2 font-semibold flex items-center gap-1.5 truncate sticky left-0 bg-white/95 dark:bg-zinc-950/95 text-white-900 dark:text-white-700 z-20 border-r border-zinc-200 dark:border-zinc-800" title={modalNome}>  
+                              <span className="truncate">{modalNome}</span>  
+                            </td>  
+                            <td className="p-2 text-center font-bold font-mono bg-zinc-500/5 text-[#EE4D2D]">  
+                              {totalDoModal} <span className="text-zinc-400 dark:text-blue-500 text-[10px] font-normal">({pctGeral.toFixed(0)}%)</span>  
+                            </td>  
+                            {colunasSemanasUnicas.map((semanaNome, i) => {  
+                              const qtdEspecifica = (cruzamentoModalSemana[modalNome] && cruzamentoModalSemana[modalNome][semanaNome]) || 0;  
+                              const pctEspecifica = totalDoModal > 0 ? (qtdEspecifica / totalDoModal) * 100 : 0;  
+  
+                              return (  
+                                <td key={i} className="p-2 text-center font-mono text-zinc-700 dark:text-black-300">  
+                                  {qtdEspecifica > 0 ? (  
+                                    <span>  
+                                      <span className="font-bold">{qtdEspecifica}</span>  
+                                      <span className="text-zinc-400 dark:text-zinc-500 text-[9px] ml-0.5">({pctEspecifica.toFixed(0)}%)</span>  
+                                    </span>  
+                                  ) : (  
+                                    <span className="text-zinc-300 dark:text-zinc-700">-</span>  
+                                  )}  
+                                </td>  
+                              );  
+                            })}  
+                          </tr>  
+                        );  
+                      })  
+                    ) : (  
+                      <tr>  
+                        <td colSpan={colunasSemanasUnicas.length + 2} className="p-4 text-center text-zinc-400 italic">  
+                          Sem registros.  
+                        </td>  
+                      </tr>  
+                    )}  
                   </tbody>  
                 </table>  
               </div>  
@@ -1395,7 +1374,7 @@ export default function Dashboard({
                           );  
                         })  
                     ) : (  
-                      <tr>
+                      <tr>  
                         <td colSpan={colunasSemanasUnicas.length + 2} className="p-4 text-center text-zinc-400 italic">  
                           Sem registros.  
                         </td>  
@@ -1466,7 +1445,7 @@ export default function Dashboard({
                           );  
                         })  
                     ) : (  
-                      <tr> 
+                      <tr>  
                         <td colSpan={colunasSemanasUnicas.length + 2} className="p-4 text-center text-zinc-400 italic">  
                           Sem registros.  
                         </td>  
@@ -1477,15 +1456,9 @@ export default function Dashboard({
               </div>  
             </div>  
           </div>  
-  
-                
-              
-            );  
-          )() 
-        </div>
+        </div>  
   
       </div>  
     </div>  
   );  
 }
-
