@@ -8,6 +8,8 @@ export default function Home() {
 const [status, setStatus] = useState(""); 
 const [valorK2, setValorK2] = useState(0); 
 const [disparosRealizados, setDisparosRealizados] = useState(0); 
+const [disparosData, setDisparosData] = useState<{semana: string}[]>([]); 
+const [mediaAtendimentoAnalista, setMediaAtendimentoAnalista] = useState(0); 
 
   // Estados dos Filtros do Dashboard
   const [filtroHub, setFiltroHub] = useState("TODOS");
@@ -37,9 +39,22 @@ const [disparosRealizados, setDisparosRealizados] = useState(0);
     // 💡 Callback JSONP para Receber os dados da Planilha  
     (window as any).processarDadosPlanilha = (matrizCrua: any[][]) => {    
       if (Array.isArray(matrizCrua) && matrizCrua.length > 1) {    
-        setValorK2(Number(matrizCrua?.[1]?.[10]) || 0);  
-        const valorK2 = Number(matrizCrua?.[1]?.[10]) || 0;    
-        setDisparosRealizados(valorK2);    
+        // ========================================
+        // CONTAGEM DE DISPAROS: Coluna L (índice 11)
+        // Coluna K (índice 10) = semana do disparo
+        // ========================================
+        const disparosColetados: {semana: string}[] = [];
+        matrizCrua.slice(1).forEach((linha) => {
+          const colL = String(linha[11] || '').trim(); // Coluna L = marcador de disparo
+          if (colL !== '') {
+            const semanaK = String(linha[10] || '').trim(); // Coluna K = semana
+            disparosColetados.push({ semana: semanaK });
+          }
+        });
+        setDisparosData(disparosColetados);
+        const totalDisparos = disparosColetados.length;
+        setValorK2(totalDisparos);
+        setDisparosRealizados(totalDisparos);    
           
         const cabecalho = matrizCrua[0].map(c => String(c).trim().toLowerCase());  
               
@@ -121,11 +136,23 @@ const [disparosRealizados, setDisparosRealizados] = useState(0);
       if (scriptEnvio) scriptEnvio.remove();  
     };  
     
+    // Callback para media de atendimentos da aba "Atendimentos DD.40" celula F6
+    (window as any).processarMediaAtendimentos = (matrizMedia: any[][]) => {
+      if (Array.isArray(matrizMedia) && matrizMedia.length >= 6) {
+        // F6 = coluna F (indice 5), linha 6 (indice 5 no array zero-based, mas indice 6 contando header)
+        const valorF6 = Number(matrizMedia[5]?.[5]) || 0;
+        setMediaAtendimentoAnalista(valorF6);
+      }
+      const scriptMedia = document.getElementById("script-media-google");
+      if (scriptMedia) scriptMedia.remove();
+    };
+
     dispararSincronizacao();  
     
     return () => {  
       delete (window as any).processarDadosPlanilha;  
-      delete (window as any).confirmarGravacaoTratamento;  
+      delete (window as any).confirmarGravacaoTratamento;
+      delete (window as any).processarMediaAtendimentos;  
     };  
   }, []);
 
@@ -142,6 +169,16 @@ const [disparosRealizados, setDisparosRealizados] = useState(0);
     script.src = urlFinal;
     script.async = true;
     document.body.appendChild(script);
+
+    // Segunda chamada JSONP para buscar media de atendimento da aba "Atendimentos DD.40"
+    const scriptMediaVelho = document.getElementById("script-media-google");
+    if (scriptMediaVelho) scriptMediaVelho.remove();
+    const urlMedia = `${appsScriptUrl}?action=buscarMediaAtendimentos&callback=processarMediaAtendimentos&_=${new Date().getTime() + 1}`;
+    const scriptMedia = document.createElement("script");
+    scriptMedia.id = "script-media-google";
+    scriptMedia.src = urlMedia;
+    scriptMedia.async = true;
+    document.body.appendChild(scriptMedia);
   };
 
   const enviarTratamentoPlanilha = (e: React.FormEvent) => {
@@ -344,6 +381,8 @@ const [disparosRealizados, setDisparosRealizados] = useState(0);
          modaisPagina2={modaisPagina2}  
          classesTema={classesTema}  
          disparosRealizados={valorK2}  
+         disparosData={disparosData}  
+         mediaAtendimentoAnalista={mediaAtendimentoAnalista}  
          filtroHub={filtroHub}  
          setFiltroHub={setFiltroHub}  
          filtroModal={filtroModal}  
