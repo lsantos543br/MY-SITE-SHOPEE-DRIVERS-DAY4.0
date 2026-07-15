@@ -110,21 +110,25 @@ const [rankingHubsSheet, setRankingHubsSheet] = useState<any[]>([
     // Callback JSONP para Receber os dados da Planilha (Base automatica)
     (window as any).processarDadosPlanilha = (matrizCrua: any[][]) => {
       if (Array.isArray(matrizCrua) && matrizCrua.length > 1) {
-        // CONTAGEM DE DISPAROS: Coluna L (índice 11)
+        // PARSEAR CABEÇALHO PRIMEIRO (precisa antes dos disparos)
+        const cabecalho = matrizCrua[0].map(c => String(c).trim().toLowerCase());
+
+        // CONTAGEM DE DISPAROS: Coluna L (índice 11) — presença de nome = disparo realizado
+        // SEMANA DO DISPARO: Usa coluna B (Weekend) para bater com o filtro do site
         const disparosColetados: {semana: string}[] = [];
+        const idxWeekendDisp = cabecalho.indexOf("weekend");
         matrizCrua.slice(1).forEach((linha) => {
           const colL = String(linha[11] || '').trim();
           if (colL !== '') {
-            const semanaK = String(linha[10] || '').trim();
-            disparosColetados.push({ semana: semanaK });
+            // Usa a mesma coluna Weekend do filtro (coluna B) — NÃO a coluna K
+            const semanaDisp = idxWeekendDisp !== -1 ? String(linha[idxWeekendDisp] || '').trim() : '';
+            disparosColetados.push({ semana: semanaDisp });
           }
         });
         setDisparosData(disparosColetados);
         const totalDisparos = disparosColetados.length;
         setValorK2(totalDisparos);
         setDisparosRealizados(totalDisparos);
-
-        const cabecalho = matrizCrua[0].map(c => String(c).trim().toLowerCase());
 
         const idxDealDate = cabecalho.indexOf("deal date");
         const idxWeekend = cabecalho.indexOf("weekend");
