@@ -9,15 +9,78 @@ const [status, setStatus] = useState("");
 const [valorK2, setValorK2] = useState(0);
 const [disparosRealizados, setDisparosRealizados] = useState(0);
 const [disparosData, setDisparosData] = useState<{semana: string}[]>([]);
-const [mediaAtendimentoAnalista, setMediaAtendimentoAnalista] = useState(0);
+const [mediaAtendimentoAnalista, setMediaAtendimentoAnalista] = useState(9.8);
 
 // ========================================
-// NOVOS ESTADOS: Dados da aba Atendimentos DD.40
+// DADOS DA ABA ATENDIMENTOS DD.40 — VALORES PADRÃO DA PLANILHA
+// Se o Apps Script estiver implantado, esses valores são atualizados via JSONP.
+// Caso contrário, esses defaults (extraídos em 15/07/2026) garantem que o painel funcione.
 // ========================================
-const [atendGerais, setAtendGerais] = useState<any>(null);
-const [rankingAnalistasSheet, setRankingAnalistasSheet] = useState<any[]>([]);
-const [detalheSemanas, setDetalheSemanas] = useState<any[]>([]);
-const [rankingHubsSheet, setRankingHubsSheet] = useState<any[]>([]);
+const [atendGerais, setAtendGerais] = useState<any>({
+  totalAtendimentos: "5.023",
+  totalSemanas: "15",
+  totalDiasUteis: "73",
+  totalAnalistas: "7",
+  mediaAtendDia: "68,8",
+  mediaDiaAnalista: "9,8",
+  mediaHoraAnalista: "00:55",
+  tempoEfetivoDia: "04h55min de 9h (54,6%)",
+});
+const [rankingAnalistasSheet, setRankingAnalistasSheet] = useState<any[]>([
+  { posicao: "🥇 1", nome: "Jaqueline Abreu", totalAtend: "1.111", atendDia: "15,2", pctTotal: "22,10%", status: "✓ ACIMA", tempoEfetivo: "07h37min" },
+  { posicao: "🥈 2", nome: "Catharina Rodrigues", totalAtend: "753", atendDia: "10,3", pctTotal: "15,00%", status: "✓ ACIMA", tempoEfetivo: "05h09min" },
+  { posicao: "🥉 3", nome: "Leandro Menezes", totalAtend: "632", atendDia: "8,7", pctTotal: "12,60%", status: "✗ ABAIXO", tempoEfetivo: "04h20min" },
+  { posicao: "4", nome: "Deise Vilaça", totalAtend: "582", atendDia: "8,0", pctTotal: "11,60%", status: "✗ ABAIXO", tempoEfetivo: "03h59min" },
+  { posicao: "5", nome: "Leandro Andrade", totalAtend: "580", atendDia: "7,9", pctTotal: "11,50%", status: "✗ ABAIXO", tempoEfetivo: "03h58min" },
+  { posicao: "6", nome: "Cassia Pereira", totalAtend: "570", atendDia: "7,8", pctTotal: "11,30%", status: "✗ ABAIXO", tempoEfetivo: "03h54min" },
+  { posicao: "7", nome: "Valeria Sena", totalAtend: "529", atendDia: "7,2", pctTotal: "10,50%", status: "✗ ABAIXO", tempoEfetivo: "03h37min" },
+]);
+const [detalheSemanas, setDetalheSemanas] = useState<any[]>([
+  { semana: "Week-29", numAtend: "171", pctTotal: "3,40%", gap: "▼ -164", status: "✗ ABAIXO", analise: "Ramp-up" },
+  { semana: "Week-28", numAtend: "411", pctTotal: "8,20%", gap: "▲ +76", status: "✓ ACIMA", analise: "Acima da média" },
+  { semana: "Week-27", numAtend: "362", pctTotal: "7,20%", gap: "▲ +27", status: "✓ ACIMA", analise: "Acima da média" },
+  { semana: "Week-26", numAtend: "458", pctTotal: "9,10%", gap: "▲ +123", status: "✓ ACIMA", analise: "Acima da média" },
+  { semana: "Week-25", numAtend: "378", pctTotal: "7,50%", gap: "▲ +43", status: "✓ ACIMA", analise: "Acima da média" },
+  { semana: "Week-24", numAtend: "524", pctTotal: "10,40%", gap: "▲ +189", status: "✓ ACIMA", analise: "Forte crescimento" },
+  { semana: "Week-23", numAtend: "469", pctTotal: "9,30%", gap: "▲ +134", status: "✓ ACIMA", analise: "Acima da média" },
+  { semana: "Week-22", numAtend: "1.005", pctTotal: "20,00%", gap: "▲ +670", status: "✓ ACIMA", analise: "Pico da operação" },
+  { semana: "Week-21", numAtend: "751", pctTotal: "15,00%", gap: "▲ +416", status: "✓ ACIMA", analise: "Forte crescimento" },
+  { semana: "Week-20", numAtend: "148", pctTotal: "2,90%", gap: "▼ -187", status: "✗ ABAIXO", analise: "Ramp-up" },
+  { semana: "Week-19", numAtend: "102", pctTotal: "2,00%", gap: "▼ -233", status: "✗ ABAIXO", analise: "Ramp-up" },
+  { semana: "Week-18", numAtend: "8", pctTotal: "0,20%", gap: "▼ -327", status: "✗ ABAIXO", analise: "Início da operação" },
+  { semana: "Week-17", numAtend: "3", pctTotal: "0,10%", gap: "▼ -332", status: "✗ ABAIXO", analise: "Início da operação" },
+  { semana: "Week-16", numAtend: "6", pctTotal: "0,10%", gap: "▼ -329", status: "✗ ABAIXO", analise: "Início da operação" },
+  { semana: "Week-15", numAtend: "32", pctTotal: "0,60%", gap: "▼ -303", status: "✗ ABAIXO", analise: "Em crescimento" },
+]);
+const [rankingHubsSheet, setRankingHubsSheet] = useState<any[]>([
+  { posicao: "🥇 1", hub: "Alvim", totalAtend: "452", pctTotal: "9,00%", status: "✓ ACIMA", analise: "Líder em volume" },
+  { posicao: "🥈 2", hub: "Jurubatuba", totalAtend: "443", pctTotal: "8,80%", status: "✓ ACIMA", analise: "Líder em volume" },
+  { posicao: "🥉 3", hub: "Praia Grande2", totalAtend: "392", pctTotal: "7,80%", status: "✓ ACIMA", analise: "Líder em volume" },
+  { posicao: "4", hub: "Suzano", totalAtend: "355", pctTotal: "7,10%", status: "✓ ACIMA", analise: "Top performance" },
+  { posicao: "5", hub: "Sao bernardo", totalAtend: "310", pctTotal: "6,20%", status: "✓ ACIMA", analise: "Top performance" },
+  { posicao: "6", hub: "Osasco2", totalAtend: "281", pctTotal: "5,60%", status: "✓ ACIMA", analise: "Top performance" },
+  { posicao: "7", hub: "Taubate", totalAtend: "280", pctTotal: "5,60%", status: "✓ ACIMA", analise: "Acima da média" },
+  { posicao: "8", hub: "Pq. Novo Mundo", totalAtend: "267", pctTotal: "5,30%", status: "✓ ACIMA", analise: "Acima da média" },
+  { posicao: "9", hub: "Santo Andre", totalAtend: "212", pctTotal: "4,20%", status: "✓ ACIMA", analise: "Acima da média" },
+  { posicao: "10", hub: "Zimba", totalAtend: "208", pctTotal: "4,10%", status: "✓ ACIMA", analise: "Acima da média" },
+  { posicao: "11", hub: "Sao Jose dos Campos", totalAtend: "199", pctTotal: "4,00%", status: "✓ ACIMA", analise: "Acima da média" },
+  { posicao: "12", hub: "Lapa", totalAtend: "180", pctTotal: "3,60%", status: "✗ ABAIXO", analise: "Próximo da média" },
+  { posicao: "13", hub: "Guarulhos", totalAtend: "175", pctTotal: "3,50%", status: "✗ ABAIXO", analise: "Próximo da média" },
+  { posicao: "14", hub: "Praia Grande1", totalAtend: "174", pctTotal: "3,50%", status: "✗ ABAIXO", analise: "Próximo da média" },
+  { posicao: "15", hub: "Maua", totalAtend: "155", pctTotal: "3,10%", status: "✗ ABAIXO", analise: "Performance moderada" },
+  { posicao: "16", hub: "Guaruja", totalAtend: "150", pctTotal: "3,00%", status: "✗ ABAIXO", analise: "Performance moderada" },
+  { posicao: "17", hub: "Barueri", totalAtend: "147", pctTotal: "2,90%", status: "✗ ABAIXO", analise: "Performance moderada" },
+  { posicao: "18", hub: "Embu1", totalAtend: "121", pctTotal: "2,40%", status: "✗ ABAIXO", analise: "Performance moderada" },
+  { posicao: "19", hub: "Embu2", totalAtend: "99", pctTotal: "2,00%", status: "✗ ABAIXO", analise: "Necessita atenção" },
+  { posicao: "20", hub: "Adriana", totalAtend: "88", pctTotal: "1,80%", status: "✗ ABAIXO", analise: "Necessita atenção" },
+  { posicao: "21", hub: "Carandiru", totalAtend: "75", pctTotal: "1,50%", status: "✗ ABAIXO", analise: "Necessita atenção" },
+  { posicao: "22", hub: "Mooca1", totalAtend: "54", pctTotal: "1,10%", status: "✗ ABAIXO", analise: "Baixo volume" },
+  { posicao: "23", hub: "Vila Guilherme", totalAtend: "48", pctTotal: "1,00%", status: "✗ ABAIXO", analise: "Baixo volume" },
+  { posicao: "24", hub: "Mooca2", totalAtend: "45", pctTotal: "0,90%", status: "✗ ABAIXO", analise: "Baixo volume" },
+  { posicao: "25", hub: "Guaratingueta", totalAtend: "41", pctTotal: "0,80%", status: "✗ ABAIXO", analise: "Baixo volume" },
+  { posicao: "26", hub: "Itapevi", totalAtend: "37", pctTotal: "0,70%", status: "✗ ABAIXO", analise: "Baixo volume" },
+  { posicao: "27", hub: "Registro", totalAtend: "27", pctTotal: "0,50%", status: "✗ ABAIXO", analise: "Baixo volume" },
+]);
 
   // Estados dos Filtros do Dashboard
   const [filtroHub, setFiltroHub] = useState("TODOS");
