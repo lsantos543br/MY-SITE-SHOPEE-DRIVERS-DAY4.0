@@ -103,14 +103,14 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
     return text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\n- /g, '\n• ')
-      .replace(/\n(\d+)\. /g, '\n<span style="color:#f97316;font-weight:bold">$1.</span> ')
+      .replace(/\n(\d+)\. /g, '\n<span style="color:#ee4d2d;font-weight:bold">$1.</span> ')
       .replace(/💡/g, '<span style="font-size:1.2em">💡</span>')
       .replace(/\n/g, '<br/>');
   };
 
   return (
     <>
-      {/* Botão flutuante */}
+      {/* Botão flutuante - Estilo Shopee */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         style={{
@@ -120,25 +120,25 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
           width: "60px",
           height: "60px",
           borderRadius: "50%",
-          background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
+          background: "linear-gradient(135deg, #ee4d2d 0%, #ff5722 100%)",
           border: "none",
           cursor: "pointer",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          boxShadow: "0 4px 20px rgba(249,115,22,0.4)",
+          boxShadow: "0 4px 20px rgba(238,77,45,0.4)",
           zIndex: 9999,
           transition: "transform 0.2s, box-shadow 0.2s",
         }}
         onMouseEnter={(e) => {
           (e.target as HTMLElement).style.transform = "scale(1.1)";
-          (e.target as HTMLElement).style.boxShadow = "0 6px 28px rgba(249,115,22,0.5)";
+          (e.target as HTMLElement).style.boxShadow = "0 6px 28px rgba(238,77,45,0.5)";
         }}
         onMouseLeave={(e) => {
           (e.target as HTMLElement).style.transform = "scale(1)";
-          (e.target as HTMLElement).style.boxShadow = "0 4px 20px rgba(249,115,22,0.4)";
+          (e.target as HTMLElement).style.boxShadow = "0 4px 20px rgba(238,77,45,0.4)";
         }}
-        title="Assistente IA Gerencial"
+        title="Beacon DD4.0"
       >
         {isOpen ? (
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
@@ -173,37 +173,75 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
             overflow: "hidden",
           }}
         >
-          {/* Header */}
+          {/* Header - Customizado com Shopito & Shopee Theme */}
           <div
             style={{
               padding: "16px 20px",
-              background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
+              background: "linear-gradient(135deg, #ee4d2d 0%, #ff5722 100%)",
               display: "flex",
               alignItems: "center",
               gap: "12px",
+              position: "relative",
             }}
           >
+            {/* Foto do Shopito com Borda Branca e Indicador Online */}
             <div
               style={{
-                width: "36px",
-                height: "36px",
+                width: "40px",
+                height: "40px",
                 borderRadius: "50%",
-                backgroundColor: "rgba(255,255,255,0.2)",
+                backgroundColor: "white",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                overflow: "hidden",
+                border: "2px solid white",
+                position: "relative",
               }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                <path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1.27A7 7 0 0113 22h-2a7 7 0 01-6.73-3H3a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2zM9 16a1 1 0 100 2 1 1 0 000-2zm6 0a1 1 0 100 2 1 1 0 000-2z"/>
-              </svg>
+              <img 
+                src="https://images.tcdn.com.br/img/img_prod/1129939/mascote_shopito_shopee_60cm_pelucia_original_com_nota_fiscal_357_1_c8d1976a445d43cae18efca1c8751523.jpg" 
+                alt="Shopito Mascote" 
+                style={{
+                  width: "105%",
+                  height: "105%",
+                  objectFit: "cover",
+                }}
+              />
+              {/* Ponto verde Online */}
+              <span 
+                style={{
+                  position: "absolute",
+                  bottom: "0",
+                  right: "0",
+                  width: "10px",
+                  height: "10px",
+                  backgroundColor: "#10b981",
+                  borderRadius: "50%",
+                  border: "2px solid white",
+                }}
+              />
             </div>
+            
             <div>
-              <div style={{ fontWeight: "bold", color: "white", fontSize: "15px" }}>
-                Assistente IA Gerencial
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontWeight: "800", color: "white", fontSize: "16px", letterSpacing: "0.3px" }}>
+                  Beacon DD4.0
+                </span>
+                <span style={{
+                  backgroundColor: "white",
+                  color: "#ee4d2d",
+                  fontSize: "9px",
+                  fontWeight: "900",
+                  padding: "1px 5px",
+                  borderRadius: "4px",
+                  textTransform: "uppercase"
+                }}>
+                  IA
+                </span>
               </div>
-              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.8)" }}>
-                Pergunte sobre a operação • Powered by Grok
+              <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.9)", fontWeight: "500" }}>
+                Co-piloto de Gestão de Frota • Shopee DD
               </div>
             </div>
           </div>
@@ -219,13 +257,13 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
               gap: "12px",
             }}
           >
-            {/* Welcome */}
+            {/* Welcome - Atualizado para o Beacon */}
             {messages.length === 0 && (
               <div style={{ textAlign: "center", padding: "20px 10px" }}>
-                <div style={{ fontSize: "40px", marginBottom: "12px" }}>📊</div>
+                <div style={{ fontSize: "40px", marginBottom: "12px" }}>🧡</div>
                 <div style={{ color: "#9ca3af", fontSize: "14px", marginBottom: "20px" }}>
-                  Olá! Sou seu assistente de gestão.<br />
-                  Pergunte qualquer coisa sobre a operação.
+                  Olá! Eu sou o <strong>Beacon DD4.0</strong>, seu analista e assistente.<br />
+                  Selecione um tópico abaixo ou faça sua própria pergunta sobre a operação.
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center" }}>
                   {SUGESTOES_RAPIDAS.map((sug, i) => (
@@ -243,8 +281,8 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
                         transition: "all 0.2s",
                       }}
                       onMouseEnter={(e) => {
-                        (e.target as HTMLElement).style.borderColor = "#f97316";
-                        (e.target as HTMLElement).style.color = "#f97316";
+                        (e.target as HTMLElement).style.borderColor = "#ee4d2d";
+                        (e.target as HTMLElement).style.color = "#ee4d2d";
                       }}
                       onMouseLeave={(e) => {
                         (e.target as HTMLElement).style.borderColor = "#374151";
@@ -272,7 +310,7 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
                     maxWidth: "85%",
                     padding: "10px 14px",
                     borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-                    backgroundColor: msg.role === "user" ? "#f97316" : "#1f2937",
+                    backgroundColor: msg.role === "user" ? "#ee4d2d" : "#1f2937",
                     color: msg.role === "user" ? "white" : "#e5e7eb",
                     fontSize: "13px",
                     lineHeight: "1.5",
@@ -320,7 +358,7 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
                           width: "8px",
                           height: "8px",
                           borderRadius: "50%",
-                          backgroundColor: "#f97316",
+                          backgroundColor: "#ee4d2d",
                           animation: `aiChatPulse 1.4s ease-in-out ${i * 0.2}s infinite`,
                         }}
                       />
@@ -373,7 +411,7 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
                   enviarPergunta(input);
                 }
               }}
-              placeholder="Pergunte sobre a operação..."
+              placeholder="Fale com o Beacon DD4.0..."
               disabled={isLoading}
               style={{
                 flex: 1,
@@ -386,7 +424,7 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
                 outline: "none",
                 transition: "border-color 0.2s",
               }}
-              onFocus={(e) => (e.target.style.borderColor = "#f97316")}
+              onFocus={(e) => (e.target.style.borderColor = "#ee4d2d")}
               onBlur={(e) => (e.target.style.borderColor = "#374151")}
             />
             <button
@@ -400,7 +438,7 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
                 background:
                   isLoading || !input.trim()
                     ? "#374151"
-                    : "linear-gradient(135deg, #f97316, #ea580c)",
+                    : "linear-gradient(135deg, #ee4d2d, #ff5722)",
                 cursor: isLoading || !input.trim() ? "not-allowed" : "pointer",
                 display: "flex",
                 alignItems: "center",
