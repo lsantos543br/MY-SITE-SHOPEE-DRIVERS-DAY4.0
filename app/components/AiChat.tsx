@@ -115,11 +115,11 @@
           onClick={() => setIsOpen(!isOpen)}
           style={{
             position: "fixed",
-            top: "24px",     
-            left: "24px",    
-            width: "80px",        // Aumentado de 60px para 80px
-            height: "80px",       // Aumentado de 60px para 80px
-            borderRadius: "50%",
+            top: "170px",     
+            left: "1450px",    
+            width: "210px",        // Aumentado de 60px para 80px
+            height: "50px",       // Aumentado de 60px para 80px
+            borderRadius: "30%",
             background: "linear-gradient(135deg, #ee4d2d 0%, #ff5722 100%)", // Gradiente Shopee super moderno
             border: "3px solid #ffffff", 
             cursor: "pointer",
@@ -143,16 +143,16 @@
           title="Falar com o Beacon DD4.0"
         >
           {/* Emoji de Raposinha Laranja (Mascote) + Texto compacto para ficar lindo */}
-          <span style={{ fontSize: "28px", lineHeight: "1" }}>🦊</span>
+          <span style={{ fontSize: "28px", lineHeight: "1" }}>🛰️</span>
           <span style={{ 
-            fontSize: "10px", 
+            fontSize: "12px", 
             fontWeight: "900", 
-            color: "white", 
+            color: "yellow", 
             marginTop: "2px",
             textTransform: "uppercase",
             letterSpacing: "0.5px"
           }}>
-            Beacon
+            Beacon AI
           </span>
           
           {/* Ponto verde de Online */}
@@ -176,9 +176,9 @@
           <div
             style={{
               position: "fixed",
-              top: "120px",     // Espaço ligeiramente maior para o botão de 80px
-              left: "24px",    
-              width: "420px",
+              top: "140px",     // Espaço ligeiramente maior para o botão de 80px
+              left: "724px",    
+              width: "820px",
               maxWidth: "calc(100vw - 48px)",
               height: "600px",
               maxHeight: "calc(100vh - 150px)",
@@ -209,7 +209,7 @@
                   width: "40px",
                   height: "40px",
                   borderRadius: "50%",
-                  backgroundColor: "white",
+                  backgroundColor: "Blue",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
