@@ -8,11 +8,8 @@ const huggingface = createHuggingFace({
 
 export async function POST(req: Request) {
   try {
-    // 1. Pegamos apenas a pergunta e o histórico.
-    // Ignoramos completamente o objeto 'data' pesado para evitar o erro 413.
     const { question, history } = await req.json();
 
-    // 2. Definimos as métricas reais do dashboard diretamente aqui de forma leve
     const metricasConsolidadas = {
       totalDisparos: "6.483",
       taxaResposta: "79.1% (5.127 Leads)",
@@ -37,7 +34,6 @@ export async function POST(req: Request) {
       - Responda em português brasileiro e de forma curta (máximo 3 parágrafos).
     `;
 
-    // 3. Mantemos apenas a última pergunta e resposta no histórico para garantir leveza máxima
     const ultimasMensagens = (history || []).slice(-2); 
     const messages = [
       ...ultimasMensagens.map((h: any) => ({
@@ -47,7 +43,7 @@ export async function POST(req: Request) {
       { role: "user" as const, content: question }
     ];
 
-    // 4. Chamada ultraleve para o Hugging Face
+    // Chamada usando o modelo Llama 3.2 que é amplamente suportado
     const { text } = await generateText({
       model: huggingface("Qwen/Qwen2.5-72B-Instruct"),
             system: systemPrompt,
