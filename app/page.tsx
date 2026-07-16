@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Dashboard from "./Dashboard";
+import AiChat from "./components/AiChat";
 
 export default function Home() {
   const [baseMotoristas, setBaseMotoristas] = useState<any[]>([]);
@@ -726,6 +727,33 @@ const [rankingHubsSheet, setRankingHubsSheet] = useState<any[]>([
         )}
 
       </div>
+
+      {/* ============================================================ */}
+      {/* ASSISTENTE IA GERENCIAL — CHAT COM GEMINI                    */}
+      {/* ============================================================ */}
+      {baseMotoristas.length > 0 && (
+        <AiChat
+          dadosOperacao={{
+            resumo: {
+              mediaAtendimentos: atendGerais?.mediaDiaAnalista || "9,8",
+              totalAtendimentos: atendGerais?.totalAtendimentos || "0",
+              sla: atendGerais?.tempoEfetivoDia || "—",
+              totalAnalistas: atendGerais?.totalAnalistas || "0",
+              totalSemanas: atendGerais?.totalSemanas || "0",
+              totalHubs: rankingHubsSheet.length.toString(),
+              mediaAtendDia: atendGerais?.mediaAtendDia || "0",
+              mediaHoraAnalista: atendGerais?.mediaHoraAnalista || "0",
+              totalDiasUteis: atendGerais?.totalDiasUteis || "0",
+            },
+            analistas: rankingAnalistasSheet,
+            hubs: rankingHubsSheet,
+            semanas: detalheSemanas,
+            disparos: disparosData,
+            motoristas: baseMotoristas,
+          }}
+        />
+      )}
+
     </div>
   );
 }
