@@ -114,7 +114,7 @@
         <button
           onClick={() => setIsOpen(!isOpen)}
           style={{
-            position: "fixed",
+            position: "absolute",
             top: "170px",     
             left: "1450px",    
             width: "210px",        // Aumentado de 60px para 80px
@@ -177,7 +177,7 @@
             style={{
               position: "fixed",
               top: "250px",     // Espaço ligeiramente maior para o botão de 80px
-              left: "1154px",    
+              left: "854px",    
               width: "720px",
               maxWidth: "calc(100vw - 48px)",
               height: "600px",
