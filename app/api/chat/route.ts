@@ -77,15 +77,17 @@ function prepararContextoDados(data: any): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
+    // 1. Buscando a chave correta salva na Vercel (GROQ_API_KEY)
+    const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: "GEMINI_API_KEY não configurada no Vercel." },
+        { error: "GROQ_API_KEY não configurada no Vercel." },
         { status: 500 }
       );
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    // URL oficial do chat completions da Groq
+    const url = "https://api.groq.com/openai/v1/chat/completions";
 
     const body = await req.json();
     const { question, data, history } = body;
@@ -95,39 +97,46 @@ export async function POST(req: NextRequest) {
     }
 
     const contextoDados = prepararContextoDados(data || {});
+    
+    // Mapeamento do histórico para o padrão clássico da API da OpenAI/Groq
     const mensagensHistorico = (history || []).slice(-6).map((msg: any) => ({
-      role: msg.role === "user" ? "user" : "model",
-      parts: [{ text: msg.content }],
+      role: msg.role === "user" ? "user" : "assistant",
+      content: msg.content,
     }));
 
-    const geminiBody = {
-      contents: [
-        { role: "user", parts: [{ text: `${SYSTEM_PROMPT}\n\n---\n\n# DADOS ATUAIS:\n\n${contextoDados}\n\n---\n\nResponda com dados reais e sugestões de ação.` }] },
-        { role: "model", parts: [{ text: "Entendido! Sou o Assistente DD. Pronto para responder." }] },
+    // Montando a requisição para a Groq
+    const groqBody = {
+      model: "llama-3.3-70b-versatile", // Modelo ultra-rápido e inteligente da Groq
+      messages: [
+        { role: "system", content: `${SYSTEM_PROMPT}\n\n# DADOS ATUAIS DA OPERAÇÃO:\n${contextoDados}` },
         ...mensagensHistorico,
-        { role: "user", parts: [{ text: question }] },
+        { role: "user", content: question }
       ],
-      generationConfig: { temperature: 0.4, topP: 0.9, maxOutputTokens: 2048 },
+      temperature: 0.3,
+      max_tokens: 1024,
     };
 
     const response = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(geminiBody),
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(groqBody),
     });
 
     if (!response.ok) {
       const err = await response.text();
-      console.error("Gemini error:", response.status, err);
-      return NextResponse.json({ error: `Erro Gemini (${response.status})` }, { status: 502 });
+      console.error("Groq API error:", response.status, err);
+      return NextResponse.json({ error: `Erro na API da Groq (${response.status})` }, { status: 502 });
     }
 
     const result = await response.json();
-    const answer = result?.candidates?.[0]?.content?.parts?.[0]?.text || "Sem resposta. Reformule a pergunta.";
+    const answer = result?.choices?.[0]?.message?.content || "Sem resposta. Reformule a pergunta.";
 
     return NextResponse.json({ answer });
   } catch (err: any) {
     console.error("Chat API error:", err);
-    return NextResponse.json({ error: "Erro interno." }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno no servidor." }, { status: 500 });
   }
 }

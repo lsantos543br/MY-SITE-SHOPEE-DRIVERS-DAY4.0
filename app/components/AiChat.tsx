@@ -203,7 +203,7 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
                 Assistente IA Gerencial
               </div>
               <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.8)" }}>
-                Pergunte sobre a operação • Powered by Gemini
+                Pergunte sobre a operação • Powered by Grok
               </div>
             </div>
           </div>
