@@ -176,9 +176,9 @@
           <div
             style={{
               position: "fixed",
-              top: "140px",     // Espaço ligeiramente maior para o botão de 80px
-              left: "724px",    
-              width: "820px",
+              top: "250px",     // Espaço ligeiramente maior para o botão de 80px
+              left: "1154px",    
+              width: "720px",
               maxWidth: "calc(100vw - 48px)",
               height: "600px",
               maxHeight: "calc(100vh - 150px)",
