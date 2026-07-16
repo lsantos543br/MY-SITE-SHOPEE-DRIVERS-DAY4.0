@@ -725,39 +725,10 @@ const [rankingHubsSheet, setRankingHubsSheet] = useState<any[]>([
             </div>
           </div>
         )}
-{baseMotoristas.length > 0 && (
-  <AiChat
-    dadosOperacao={{
-      resumo: {
-        mediaAtendimentos: atendGerais?.mediaDiaAnalista || "9,8",
-        totalAtendimentos: atendGerais?.totalAtendimentos || "0",
-        sla: atendGerais?.tempoEfetivoDia || "—",
-        totalAnalistas: atendGerais?.totalAnalistas || "0",
-        totalSemanas: atendGerais?.totalSemanas || "0",
-        totalHubs: String(rankingHubsSheet.length),
-        mediaAtendDia: atendGerais?.mediaAtendDia || "0",
-        mediaHoraAnalista: atendGerais?.mediaHoraAnalista || "0",
-        totalDiasUteis: atendGerais?.totalDiasUteis || "0",
-      },
-      analistas: rankingAnalistasSheet,
-      hubs: rankingHubsSheet,
-      semanas: detalheSemanas,
-      disparos: disparosData,
-      motoristas: baseMotoristas,
-    }}
-  />
-)}
-3. Salva e roda:
-npm run build
-Se passar sem erro, faz o push:
-git add .
-git commit -m "fix: AiChat props corretas"
-git push
+
       </div>
 
-      {/* ============================================================ */}
-      {/* ASSISTENTE IA GERENCIAL — CHAT COM GEMINI                    */}
-      {/* ============================================================ */}
+      {/* ASSISTENTE IA GERENCIAL */}
       {baseMotoristas.length > 0 && (
         <AiChat
           dadosOperacao={{
@@ -767,7 +738,7 @@ git push
               sla: atendGerais?.tempoEfetivoDia || "—",
               totalAnalistas: atendGerais?.totalAnalistas || "0",
               totalSemanas: atendGerais?.totalSemanas || "0",
-              totalHubs: rankingHubsSheet.length.toString(),
+              totalHubs: String(rankingHubsSheet.length),
               mediaAtendDia: atendGerais?.mediaAtendDia || "0",
               mediaHoraAnalista: atendGerais?.mediaHoraAnalista || "0",
               totalDiasUteis: atendGerais?.totalDiasUteis || "0",
