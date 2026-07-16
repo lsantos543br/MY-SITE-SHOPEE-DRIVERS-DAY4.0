@@ -140,43 +140,22 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
         if (res.ok) {
           data = await res.json();
         } else {
-          // 🟠 2ª OPÇÃO (FALLBACK): Se o Groq der erro (Ex: 429 Limite Diário), aciona o ChatGPT
+          // 🟠 2ª OPÇÃO (FALLBACK): Se o Groq falhar, aciona o back-end do ChatGPT com segurança
           console.warn("Groq indisponível ou limite diário atingido. Acionando ChatGPT...");
 
-          // ==========================================
-          // CONFIGURAÇÃO DO SEU CHATGPT (OPENAI)
-          // ==========================================
           const CONFIG_OPENAI = {
-            // Se você criou uma rota própria no seu projeto (Ex: "/api/chat-openai"), configure aqui:
-            URL_DA_API: "/api/chat-openai", // <--- Deixe esta rota ou mude para o seu endpoint
-            
-            // Caso vá testar direto no client-side com fetch direto para a OpenAI (não recomendado para produção):
-            // URL_DIRETA_OPENAI: "https://api.openai.com/v1/chat/completions",
-            // CHAVE_API_DIRETA: "SUA_API_KEY_DA_OPENAI_AQUI", 
-            // MODELO: "gpt-4o-mini" // Modelo rápido e muito barato
+            URL_DA_API: "/api/chat-openai",
           };
-          // ==========================================
 
           const fallbackRes = await fetch(CONFIG_OPENAI.URL_DA_API, {
             method: "POST",
             headers: { 
               "Content-Type": "application/json",
-              // Caso decida fazer a requisição DIRETAMENTE para a OpenAI no frontend (descomente as 2 linhas abaixo se necessário):
-              // "Authorization": `Bearer ${CONFIG_OPENAI.CHAVE_API_DIRETA}`
             },
             body: JSON.stringify({
               question: pergunta.trim(),
               data: dadosOperacao,
               history,
-              // Caso o fetch seja direto para a OpenAI, o body precisa seguir o padrão deles:
-              /*
-              model: CONFIG_OPENAI.MODELO,
-              messages: [
-                { role: "system", content: "Você é o Beacon DD4.0..." },
-                ...history,
-                { role: "user", content: pergunta.trim() }
-              ]
-              */
             }),
           });
 
@@ -191,7 +170,7 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
         const assistantMsg: Message = {
           id: `assistant-${Date.now()}`,
           role: "assistant",
-          content: data.answer || data.choices?.[0]?.message?.content, // Trata o retorno dependendo de onde veio
+          content: data.answer || data.choices?.[0]?.message?.content,
           timestamp: new Date(),
         };
 
