@@ -509,8 +509,8 @@ const [rankingHubsSheet, setRankingHubsSheet] = useState<any[]>([
         {/* HEADER */}
         <div className="flex flex-col lg:flex-row items-center gap-6 pb-4 border-b border-zinc-800/600 w-full">
           <div className="w-full lg:w-1/4 flex items-center gap-3 shrink-0">
-          <div className="w-10 h-12 rounded-full bg-[#EE4D2D]/10 dark:bg-[#EE4D2D]/20 border border-[#EE4D2D]/30 flex items-center justify-center text-2xl shadow-md select-none transition-transform hover:scale-105">
-  🦊
+          <div className="w-10 h-22 rounded-full bg-[#EE4D2D]/10 dark:bg-[#EE4D2D]/20 border border-[#EE4D2D]/30 flex items-center justify-center text-2xl shadow-md select-none transition-transform hover:scale-105">
+          🚚
 </div>
             <div>
             <h1 className="text-4xl font-black tracking-tight text-[#FF6E51] leading-tight">
