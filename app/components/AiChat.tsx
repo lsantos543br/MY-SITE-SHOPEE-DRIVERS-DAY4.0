@@ -123,6 +123,10 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
           content: m.content,
         }));
 
+        let data;
+
+        // 🟢 1ª OPÇÃO: Tenta enviar para a sua API principal (Groq)
+        console.log("Tentando obter resposta da API principal (Groq)...");
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -133,22 +137,67 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
           }),
         });
 
-        const data = await res.json();
+        if (res.ok) {
+          data = await res.json();
+        } else {
+          // 🟠 2ª OPÇÃO (FALLBACK): Se o Groq der erro (Ex: 429 Limite Diário), aciona o ChatGPT
+          console.warn("Groq indisponível ou limite diário atingido. Acionando ChatGPT...");
 
-        if (!res.ok) {
-          throw new Error(data.error || "Erro ao processar pergunta");
+          // ==========================================
+          // CONFIGURAÇÃO DO SEU CHATGPT (OPENAI)
+          // ==========================================
+          const CONFIG_OPENAI = {
+            // Se você criou uma rota própria no seu projeto (Ex: "/api/chat-openai"), configure aqui:
+            URL_DA_API: "/api/chat-openai", // <--- Deixe esta rota ou mude para o seu endpoint
+            
+            // Caso vá testar direto no client-side com fetch direto para a OpenAI (não recomendado para produção):
+            // URL_DIRETA_OPENAI: "https://api.openai.com/v1/chat/completions",
+            // CHAVE_API_DIRETA: "SUA_API_KEY_DA_OPENAI_AQUI", 
+            // MODELO: "gpt-4o-mini" // Modelo rápido e muito barato
+          };
+          // ==========================================
+
+          const fallbackRes = await fetch(CONFIG_OPENAI.URL_DA_API, {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              // Caso decida fazer a requisição DIRETAMENTE para a OpenAI no frontend (descomente as 2 linhas abaixo se necessário):
+              // "Authorization": `Bearer ${CONFIG_OPENAI.CHAVE_API_DIRETA}`
+            },
+            body: JSON.stringify({
+              question: pergunta.trim(),
+              data: dadosOperacao,
+              history,
+              // Caso o fetch seja direto para a OpenAI, o body precisa seguir o padrão deles:
+              /*
+              model: CONFIG_OPENAI.MODELO,
+              messages: [
+                { role: "system", content: "Você é o Beacon DD4.0..." },
+                ...history,
+                { role: "user", content: pergunta.trim() }
+              ]
+              */
+            }),
+          });
+
+          if (!fallbackRes.ok) {
+            const fallbackData = await fallbackRes.json();
+            throw new Error(fallbackData.error || "Ambas as APIs falharam em responder.");
+          }
+
+          data = await fallbackRes.json();
         }
 
         const assistantMsg: Message = {
           id: `assistant-${Date.now()}`,
           role: "assistant",
-          content: data.answer,
+          content: data.answer || data.choices?.[0]?.message?.content, // Trata o retorno dependendo de onde veio
           timestamp: new Date(),
         };
 
         setMessages((prev) => [...prev, assistantMsg]);
       } catch (err: any) {
-        setError(err.message || "Erro de conexão");
+        setError(err.message || "Erro de conexão ao tentar processar sua pergunta");
       } finally {
         setIsLoading(false);
       }
@@ -157,6 +206,7 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
   );
 
   const formatarResposta = (text: string) => {
+    if (!text) return "";
     return text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\n- /g, '\n• ')
@@ -171,7 +221,6 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
       <button
         onMouseDown={handleMouseDown}
         onClick={() => {
-          // Só abre ou fecha se o usuário não estava arrastando o botão
           if (!hasDragged) {
             setIsOpen(!isOpen);
           }
@@ -194,7 +243,6 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
             ? "0 16px 36px rgba(238,77,45,0.6)" 
             : "0 8px 24px rgba(238,77,45,0.4)", 
           zIndex: 9999,
-          // Desativa as transições de movimento enquanto arrasta para remover o delay de atraso do ponteiro
           transition: isDragging ? "none" : "transform 0.2s, box-shadow 0.2s",
           padding: 0,
           userSelect: "none",
@@ -225,7 +273,6 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
           Beacon AI
         </span>
         
-        {/* Ponto verde de Online */}
         <span 
           style={{
             position: "absolute",
@@ -262,7 +309,7 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
             overflow: "hidden",
           }}
         >
-          {/* Header - Customizado */}
+          {/* Header */}
           <div
             style={{
               padding: "16px 20px",
@@ -273,7 +320,6 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
               position: "relative",
             }}
           >
-            {/* Avatar do Header usando Emoji */}
             <div
               style={{
                 width: "40px",
@@ -337,7 +383,6 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
               gap: "12px",
             }}
           >
-            {/* Novo texto de Boas-vindas personalizado por você */}
             {messages.length === 0 && (
               <div style={{ textAlign: "center", padding: "20px 10px" }}>
                 <div style={{ fontSize: "44px", marginBottom: "16px" }}>🧡</div>
@@ -376,7 +421,6 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
               </div>
             )}
 
-            {/* Mensagens */}
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -416,7 +460,6 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
               </div>
             ))}
 
-            {/* Loading */}
             {isLoading && (
               <div style={{ display: "flex", justifyContent: "flex-start" }}>
                 <div
@@ -451,7 +494,6 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
               </div>
             )}
 
-            {/* Error */}
             {error && (
               <div
                 style={{
