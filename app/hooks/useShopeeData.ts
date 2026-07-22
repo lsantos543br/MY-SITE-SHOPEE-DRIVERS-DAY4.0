@@ -82,7 +82,6 @@ const fetchShopeeApi = async (action: string, payload: ShopeeApiPayload = {}) =>
 
   const text = await response.text();
 
-  // Try to parse JSON safely; if parsing fails, include text snippet in error
   let json: Record<string, unknown> | null = null;
   try {
     json = text ? JSON.parse(text) : null;
@@ -258,9 +257,11 @@ const processarMediaAtendimentos = (
   setRankingHubsSheet: Dispatch<SetStateAction<RankingHubRow[]>>,
   setStatus: Dispatch<SetStateAction<string>>
 ) => {
-  if (matrizMedia && typeof matrizMedia === "object" && (matrizMedia.status === "error" || matrizMedia.error)) {
+  // AJUSTE REALIZADO AQUI (Ajuste de tipagem para passar pelo build da Vercel/TypeScript):
+  const mediaObj = matrizMedia as Record<string, any>;
+  if (matrizMedia && typeof matrizMedia === "object" && (mediaObj.status === "error" || mediaObj.error)) {
     console.warn("Apps Script retornou erro de métricas:", matrizMedia);
-    setStatus(`⚠️ ${matrizMedia.message || matrizMedia.error || "Erro ao carregar métricas."}`);
+    setStatus(`⚠️ ${mediaObj.message || mediaObj.error || "Erro ao carregar métricas."}`);
     return;
   }
 
