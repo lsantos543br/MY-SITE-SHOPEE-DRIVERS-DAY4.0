@@ -170,7 +170,7 @@ function buildUrl(action: string, payload: Payload) {
 
 function parseAppsScriptResponse(text: string) {
   const trimmed = text.trim();
-  const callbackMatch = trimmed.match(/^[^(]*\((.*)\);?$/s);
+  const callbackMatch = trimmed.match(/^[^(]*\(([\s\S]*)\);?$/);
   const payload = callbackMatch ? callbackMatch[1] : trimmed;
   try {
     return JSON.parse(payload);
