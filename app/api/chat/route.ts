@@ -23,42 +23,57 @@ const SYSTEM_PROMPT = `Você é o **Assistente de Gestão DD (Drivers Day)** —
 5. Seja direto e executivo.
 6. Compare com médias quando possível.`;
 
-function prepararContextoDados(data: any): string {
+function prepararContextoDados(data: unknown): string {
   const partes: string[] = [];
-  if (data.resumo) {
+  const d = (typeof data === 'object' && data !== null) ? data as Record<string, unknown> : {};
+
+  const resumo = d.resumo as Record<string, unknown> | undefined;
+  if (resumo) {
     partes.push(`## Resumo Geral
-- Média Atend/Dia/Analista: ${data.resumo.mediaAtendimentos ?? "N/D"}
-- Total Atendimentos: ${data.resumo.totalAtendimentos ?? "N/D"}
-- SLA: ${data.resumo.sla ?? "N/D"}
-- Analistas: ${data.resumo.totalAnalistas ?? "N/D"}
-- Semanas: ${data.resumo.totalSemanas ?? "N/D"}
-- HUBs: ${data.resumo.totalHubs ?? "N/D"}`);
+- Média Atend/Dia/Analista: ${String(resumo.mediaAtendimentos ?? "N/D")}
+- Total Atendimentos: ${String(resumo.totalAtendimentos ?? "N/D")}
+- SLA: ${String(resumo.sla ?? "N/D")}
+- Analistas: ${String(resumo.totalAnalistas ?? "N/D")}
+- Semanas: ${String(resumo.totalSemanas ?? "N/D")}
+- HUBs: ${String(resumo.totalHubs ?? "N/D")}`);
   }
-  if (data.analistas?.length > 0) {
-    partes.push(`\n## Analistas (${data.analistas.length})`);
-    data.analistas.forEach((a: any, i: number) => {
-      partes.push(`${i+1}. **${a.nome}** — ${a.totalAtend} atend, ${a.atendDia}/dia, ${a.pctTotal}, ${a.status}, ${a.tempoEfetivo}`);
+
+  const analistas = Array.isArray(d.analistas) ? d.analistas as unknown[] : [];
+  if (analistas.length > 0) {
+    partes.push(`\n## Analistas (${analistas.length})`);
+    analistas.forEach((a, i) => {
+      const ra = (typeof a === 'object' && a !== null) ? a as Record<string, unknown> : {};
+      partes.push(`${i+1}. **${String(ra.nome ?? '')}** — ${String(ra.totalAtend ?? '')} atend, ${String(ra.atendDia ?? '')}/dia, ${String(ra.pctTotal ?? '')}, ${String(ra.status ?? '')}, ${String(ra.tempoEfetivo ?? '')}`);
     });
   }
-  if (data.hubs?.length > 0) {
-    partes.push(`\n## HUBs (${data.hubs.length})`);
-    data.hubs.forEach((h: any) => {
-      partes.push(`- **${h.hub}**: ${h.totalAtend} atend, ${h.pctTotal}, ${h.status}, ${h.analise}`);
+
+  const hubs = Array.isArray(d.hubs) ? d.hubs as unknown[] : [];
+  if (hubs.length > 0) {
+    partes.push(`\n## HUBs (${hubs.length})`);
+    hubs.forEach((h) => {
+      const rh = (typeof h === 'object' && h !== null) ? h as Record<string, unknown> : {};
+      partes.push(`- **${String(rh.hub ?? '')}**: ${String(rh.totalAtend ?? '')} atend, ${String(rh.pctTotal ?? '')}, ${String(rh.status ?? '')}, ${String(rh.analise ?? '')}`);
     });
   }
-  if (data.semanas?.length > 0) {
-    partes.push(`\n## Semanas (${data.semanas.length})`);
-    data.semanas.forEach((s: any) => {
-      partes.push(`- **${s.semana}**: ${s.numAtend} atend, ${s.pctTotal}, GAP: ${s.gap}, ${s.status}`);
+
+  const semanas = Array.isArray(d.semanas) ? d.semanas as unknown[] : [];
+  if (semanas.length > 0) {
+    partes.push(`\n## Semanas (${semanas.length})`);
+    semanas.forEach((s) => {
+      const rs = (typeof s === 'object' && s !== null) ? s as Record<string, unknown> : {};
+      partes.push(`- **${String(rs.semana ?? '')}**: ${String(rs.numAtend ?? '')} atend, ${String(rs.pctTotal ?? '')}, GAP: ${String(rs.gap ?? '')}, ${String(rs.status ?? '')}`);
     });
   }
-  if (data.motoristas?.length > 0) {
-    const total = data.motoristas.length;
+
+  const motoristas = Array.isArray(d.motoristas) ? d.motoristas as unknown[] : [];
+  if (motoristas.length > 0) {
+    const total = motoristas.length;
     const statusCount: Record<string, number> = {};
     const hubCount: Record<string, number> = {};
-    data.motoristas.forEach((m: any) => {
-      const st = m.status || m.Status || "Sem status";
-      const hb = m.hub || m.Hub || "Sem hub";
+    motoristas.forEach((m) => {
+      const rm = (typeof m === 'object' && m !== null) ? m as Record<string, unknown> : {};
+      const st = String(rm.status ?? rm.Status ?? "Sem status");
+      const hb = String(rm.hub ?? rm.Hub ?? "Sem hub");
       statusCount[st] = (statusCount[st] || 0) + 1;
       hubCount[hb] = (hubCount[hb] || 0) + 1;
     });
@@ -90,7 +105,7 @@ export async function POST(req: NextRequest) {
     const url = "https://api.groq.com/openai/v1/chat/completions";
 
     const body = await req.json();
-    const { question, data, history } = body;
+    const { question, data, history } = body as { question?: string; data?: unknown; history?: unknown };
 
     if (!question?.trim()) {
       return NextResponse.json({ error: "Pergunta vazia." }, { status: 400 });
@@ -99,10 +114,14 @@ export async function POST(req: NextRequest) {
     const contextoDados = prepararContextoDados(data || {});
     
     // Mapeamento do histórico para o padrão clássico da API da OpenAI/Groq
-    const mensagensHistorico = (history || []).slice(-6).map((msg: any) => ({
-      role: msg.role === "user" ? "user" : "assistant",
-      content: msg.content,
-    }));
+    const histArr = Array.isArray(history) ? history as unknown[] : [];
+    const mensagensHistorico = histArr.slice(-6).map((msg) => {
+      const rm = (typeof msg === 'object' && msg !== null) ? msg as Record<string, unknown> : {};
+      return {
+        role: String(rm.role) === "user" ? "user" : "assistant",
+        content: String(rm.content ?? ""),
+      };
+    });
 
     // Montando a requisição para a Groq
     const groqBody = {
@@ -135,7 +154,7 @@ export async function POST(req: NextRequest) {
     const answer = result?.choices?.[0]?.message?.content || "Sem resposta. Reformule a pergunta.";
 
     return NextResponse.json({ answer });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Chat API error:", err);
     return NextResponse.json({ error: "Erro interno no servidor." }, { status: 500 });
   }

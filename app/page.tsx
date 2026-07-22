@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Dashboard from "./Dashboard";
@@ -10,76 +10,78 @@ const [status, setStatus] = useState("");
 const [valorK2, setValorK2] = useState(0);
 const [disparosRealizados, setDisparosRealizados] = useState(0);
 const [disparosData, setDisparosData] = useState<{semana: string}[]>([]);
-const [mediaAtendimentoAnalista, setMediaAtendimentoAnalista] = useState(9.8);
+const [mediaAtendimentoAnalista, setMediaAtendimentoAnalista] = useState(9.9);
 
 // ========================================
 // DADOS DA ABA ATENDIMENTOS DD.40 — VALORES PADRÃO DA PLANILHA
+// Atualizados em 22/07/2026.
 // Se o Apps Script estiver implantado, esses valores são atualizados via JSONP.
-// Caso contrário, esses defaults (extraídos em 15/07/2026) garantem que o painel funcione.
+// Caso contrário, esses defaults garantem que o painel funcione.
 // ========================================
 const [atendGerais, setAtendGerais] = useState<any>({
-  totalAtendimentos: "5.023",
-  totalSemanas: "15",
-  totalDiasUteis: "73",
+  totalAtendimentos: "5.356",
+  totalSemanas: "16",
+  totalDiasUteis: "77",
   totalAnalistas: "7",
-  mediaAtendDia: "68,8",
-  mediaDiaAnalista: "9,8",
-  mediaHoraAnalista: "00:55",
-  tempoEfetivoDia: "04h55min de 9h (54,6%)",
+  mediaAtendDia: "69,6",
+  mediaDiaAnalista: "9,9",
+  mediaHoraAnalista: "00:54",
+  tempoEfetivoDia: "04h58min de 9h (55,2%)",
 });
 const [rankingAnalistasSheet, setRankingAnalistasSheet] = useState<any[]>([
-  { posicao: "🥇 1", nome: "Jaqueline Abreu", totalAtend: "1.111", atendDia: "15,2", pctTotal: "22,10%", status: "✓ ACIMA", tempoEfetivo: "07h37min" },
-  { posicao: "🥈 2", nome: "Catharina Rodrigues", totalAtend: "753", atendDia: "10,3", pctTotal: "15,00%", status: "✓ ACIMA", tempoEfetivo: "05h09min" },
-  { posicao: "🥉 3", nome: "Leandro Menezes", totalAtend: "632", atendDia: "8,7", pctTotal: "12,60%", status: "✗ ABAIXO", tempoEfetivo: "04h20min" },
-  { posicao: "4", nome: "Deise Vilaça", totalAtend: "582", atendDia: "8,0", pctTotal: "11,60%", status: "✗ ABAIXO", tempoEfetivo: "03h59min" },
-  { posicao: "5", nome: "Leandro Andrade", totalAtend: "580", atendDia: "7,9", pctTotal: "11,50%", status: "✗ ABAIXO", tempoEfetivo: "03h58min" },
-  { posicao: "6", nome: "Cassia Pereira", totalAtend: "570", atendDia: "7,8", pctTotal: "11,30%", status: "✗ ABAIXO", tempoEfetivo: "03h54min" },
-  { posicao: "7", nome: "Valeria Sena", totalAtend: "529", atendDia: "7,2", pctTotal: "10,50%", status: "✗ ABAIXO", tempoEfetivo: "03h37min" },
+  { posicao: "🥇 1", nome: "Jaqueline Abreu", totalAtend: "1.161", atendDia: "15,1", pctTotal: "21,70%", status: "✓ ACIMA", tempoEfetivo: "07h32min" },
+  { posicao: "🥈 2", nome: "Catharina Rodrigues", totalAtend: "811", atendDia: "10,5", pctTotal: "15,10%", status: "✓ ACIMA", tempoEfetivo: "05h16min" },
+  { posicao: "🥉 3", nome: "Leandro Andrade", totalAtend: "676", atendDia: "8,8", pctTotal: "12,60%", status: "✗ ABAIXO", tempoEfetivo: "04h23min" },
+  { posicao: "4", nome: "Deise Vilaça", totalAtend: "642", atendDia: "8,3", pctTotal: "12,00%", status: "✗ ABAIXO", tempoEfetivo: "04h10min" },
+  { posicao: "5", nome: "Leandro Menezes", totalAtend: "637", atendDia: "8,3", pctTotal: "11,90%", status: "✗ ABAIXO", tempoEfetivo: "04h08min" },
+  { posicao: "6", nome: "Cassia Pereira", totalAtend: "588", atendDia: "7,6", pctTotal: "11,00%", status: "✗ ABAIXO", tempoEfetivo: "03h49min" },
+  { posicao: "7", nome: "Valeria Sena", totalAtend: "575", atendDia: "7,5", pctTotal: "10,70%", status: "✗ ABAIXO", tempoEfetivo: "03h44min" },
 ]);
 const [detalheSemanas, setDetalheSemanas] = useState<any[]>([
-  { semana: "Week-29", numAtend: "171", pctTotal: "3,40%", gap: "▼ -164", status: "✗ ABAIXO", analise: "Ramp-up" },
-  { semana: "Week-28", numAtend: "411", pctTotal: "8,20%", gap: "▲ +76", status: "✓ ACIMA", analise: "Acima da média" },
-  { semana: "Week-27", numAtend: "362", pctTotal: "7,20%", gap: "▲ +27", status: "✓ ACIMA", analise: "Acima da média" },
-  { semana: "Week-26", numAtend: "458", pctTotal: "9,10%", gap: "▲ +123", status: "✓ ACIMA", analise: "Acima da média" },
-  { semana: "Week-25", numAtend: "378", pctTotal: "7,50%", gap: "▲ +43", status: "✓ ACIMA", analise: "Acima da média" },
-  { semana: "Week-24", numAtend: "524", pctTotal: "10,40%", gap: "▲ +189", status: "✓ ACIMA", analise: "Forte crescimento" },
-  { semana: "Week-23", numAtend: "469", pctTotal: "9,30%", gap: "▲ +134", status: "✓ ACIMA", analise: "Acima da média" },
-  { semana: "Week-22", numAtend: "1.005", pctTotal: "20,00%", gap: "▲ +670", status: "✓ ACIMA", analise: "Pico da operação" },
-  { semana: "Week-21", numAtend: "751", pctTotal: "15,00%", gap: "▲ +416", status: "✓ ACIMA", analise: "Forte crescimento" },
-  { semana: "Week-20", numAtend: "148", pctTotal: "2,90%", gap: "▼ -187", status: "✗ ABAIXO", analise: "Ramp-up" },
-  { semana: "Week-19", numAtend: "102", pctTotal: "2,00%", gap: "▼ -233", status: "✗ ABAIXO", analise: "Ramp-up" },
-  { semana: "Week-18", numAtend: "8", pctTotal: "0,20%", gap: "▼ -327", status: "✗ ABAIXO", analise: "Início da operação" },
+  { semana: "Week-30", numAtend: "150", pctTotal: "2,80%", gap: "▼ -185", status: "✗ ABAIXO", analise: "Ramp-up" },
+  { semana: "Week-29", numAtend: "374", pctTotal: "7,00%", gap: "▲ +39", status: "✓ ACIMA", analise: "Acima da média" },
+  { semana: "Week-28", numAtend: "402", pctTotal: "7,50%", gap: "▲ +67", status: "✓ ACIMA", analise: "Acima da média" },
+  { semana: "Week-27", numAtend: "359", pctTotal: "6,70%", gap: "▲ +24", status: "✓ ACIMA", analise: "Acima da média" },
+  { semana: "Week-26", numAtend: "457", pctTotal: "8,50%", gap: "▲ +122", status: "✓ ACIMA", analise: "Acima da média" },
+  { semana: "Week-25", numAtend: "377", pctTotal: "7,00%", gap: "▲ +42", status: "✓ ACIMA", analise: "Acima da média" },
+  { semana: "Week-24", numAtend: "524", pctTotal: "9,80%", gap: "▲ +189", status: "✓ ACIMA", analise: "Forte crescimento" },
+  { semana: "Week-23", numAtend: "469", pctTotal: "8,80%", gap: "▲ +134", status: "✓ ACIMA", analise: "Acima da média" },
+  { semana: "Week-22", numAtend: "1.002", pctTotal: "18,70%", gap: "▲ +667", status: "✓ ACIMA", analise: "Pico da operação" },
+  { semana: "Week-21", numAtend: "751", pctTotal: "14,00%", gap: "▲ +416", status: "✓ ACIMA", analise: "Forte crescimento" },
+  { semana: "Week-20", numAtend: "146", pctTotal: "2,70%", gap: "▼ -189", status: "✗ ABAIXO", analise: "Ramp-up" },
+  { semana: "Week-19", numAtend: "99", pctTotal: "1,80%", gap: "▼ -236", status: "✗ ABAIXO", analise: "Ramp-up" },
+  { semana: "Week-18", numAtend: "8", pctTotal: "0,10%", gap: "▼ -327", status: "✗ ABAIXO", analise: "Início da operação" },
   { semana: "Week-17", numAtend: "3", pctTotal: "0,10%", gap: "▼ -332", status: "✗ ABAIXO", analise: "Início da operação" },
   { semana: "Week-16", numAtend: "6", pctTotal: "0,10%", gap: "▼ -329", status: "✗ ABAIXO", analise: "Início da operação" },
   { semana: "Week-15", numAtend: "32", pctTotal: "0,60%", gap: "▼ -303", status: "✗ ABAIXO", analise: "Em crescimento" },
 ]);
 const [rankingHubsSheet, setRankingHubsSheet] = useState<any[]>([
-  { posicao: "🥇 1", hub: "Alvim", totalAtend: "452", pctTotal: "9,00%", status: "✓ ACIMA", analise: "Líder em volume" },
-  { posicao: "🥈 2", hub: "Jurubatuba", totalAtend: "443", pctTotal: "8,80%", status: "✓ ACIMA", analise: "Líder em volume" },
-  { posicao: "🥉 3", hub: "Praia Grande2", totalAtend: "392", pctTotal: "7,80%", status: "✓ ACIMA", analise: "Líder em volume" },
-  { posicao: "4", hub: "Suzano", totalAtend: "355", pctTotal: "7,10%", status: "✓ ACIMA", analise: "Top performance" },
-  { posicao: "5", hub: "Sao bernardo", totalAtend: "310", pctTotal: "6,20%", status: "✓ ACIMA", analise: "Top performance" },
-  { posicao: "6", hub: "Osasco2", totalAtend: "281", pctTotal: "5,60%", status: "✓ ACIMA", analise: "Top performance" },
-  { posicao: "7", hub: "Taubate", totalAtend: "280", pctTotal: "5,60%", status: "✓ ACIMA", analise: "Acima da média" },
-  { posicao: "8", hub: "Pq. Novo Mundo", totalAtend: "267", pctTotal: "5,30%", status: "✓ ACIMA", analise: "Acima da média" },
-  { posicao: "9", hub: "Santo Andre", totalAtend: "212", pctTotal: "4,20%", status: "✓ ACIMA", analise: "Acima da média" },
-  { posicao: "10", hub: "Zimba", totalAtend: "208", pctTotal: "4,10%", status: "✓ ACIMA", analise: "Acima da média" },
-  { posicao: "11", hub: "Sao Jose dos Campos", totalAtend: "199", pctTotal: "4,00%", status: "✓ ACIMA", analise: "Acima da média" },
-  { posicao: "12", hub: "Lapa", totalAtend: "180", pctTotal: "3,60%", status: "✗ ABAIXO", analise: "Próximo da média" },
-  { posicao: "13", hub: "Guarulhos", totalAtend: "175", pctTotal: "3,50%", status: "✗ ABAIXO", analise: "Próximo da média" },
-  { posicao: "14", hub: "Praia Grande1", totalAtend: "174", pctTotal: "3,50%", status: "✗ ABAIXO", analise: "Próximo da média" },
-  { posicao: "15", hub: "Maua", totalAtend: "155", pctTotal: "3,10%", status: "✗ ABAIXO", analise: "Performance moderada" },
-  { posicao: "16", hub: "Guaruja", totalAtend: "150", pctTotal: "3,00%", status: "✗ ABAIXO", analise: "Performance moderada" },
-  { posicao: "17", hub: "Barueri", totalAtend: "147", pctTotal: "2,90%", status: "✗ ABAIXO", analise: "Performance moderada" },
-  { posicao: "18", hub: "Embu1", totalAtend: "121", pctTotal: "2,40%", status: "✗ ABAIXO", analise: "Performance moderada" },
-  { posicao: "19", hub: "Embu2", totalAtend: "99", pctTotal: "2,00%", status: "✗ ABAIXO", analise: "Necessita atenção" },
-  { posicao: "20", hub: "Adriana", totalAtend: "88", pctTotal: "1,80%", status: "✗ ABAIXO", analise: "Necessita atenção" },
-  { posicao: "21", hub: "Carandiru", totalAtend: "75", pctTotal: "1,50%", status: "✗ ABAIXO", analise: "Necessita atenção" },
-  { posicao: "22", hub: "Mooca1", totalAtend: "54", pctTotal: "1,10%", status: "✗ ABAIXO", analise: "Baixo volume" },
-  { posicao: "23", hub: "Vila Guilherme", totalAtend: "48", pctTotal: "1,00%", status: "✗ ABAIXO", analise: "Baixo volume" },
-  { posicao: "24", hub: "Mooca2", totalAtend: "45", pctTotal: "0,90%", status: "✗ ABAIXO", analise: "Baixo volume" },
+  { posicao: "🥇 1", hub: "Alvim", totalAtend: "485", pctTotal: "9,10%", status: "✓ ACIMA", analise: "Líder em volume" },
+  { posicao: "🥈 2", hub: "Jurubatuba", totalAtend: "477", pctTotal: "8,90%", status: "✓ ACIMA", analise: "Líder em volume" },
+  { posicao: "🥉 3", hub: "Praia Grande2", totalAtend: "406", pctTotal: "7,60%", status: "✓ ACIMA", analise: "Líder em volume" },
+  { posicao: "4", hub: "Suzano", totalAtend: "368", pctTotal: "6,90%", status: "✓ ACIMA", analise: "Top performance" },
+  { posicao: "5", hub: "Sao bernardo", totalAtend: "334", pctTotal: "6,20%", status: "✓ ACIMA", analise: "Top performance" },
+  { posicao: "6", hub: "Osasco2", totalAtend: "283", pctTotal: "5,30%", status: "✓ ACIMA", analise: "Top performance" },
+  { posicao: "7", hub: "Pq. Novo Mundo", totalAtend: "281", pctTotal: "5,20%", status: "✓ ACIMA", analise: "Acima da média" },
+  { posicao: "8", hub: "Taubate", totalAtend: "280", pctTotal: "5,20%", status: "✓ ACIMA", analise: "Acima da média" },
+  { posicao: "9", hub: "Guarulhos", totalAtend: "247", pctTotal: "4,60%", status: "✓ ACIMA", analise: "Acima da média" },
+  { posicao: "10", hub: "Zimba", totalAtend: "220", pctTotal: "4,10%", status: "✓ ACIMA", analise: "Acima da média" },
+  { posicao: "11", hub: "Santo Andre", totalAtend: "216", pctTotal: "4,00%", status: "✓ ACIMA", analise: "Acima da média" },
+  { posicao: "12", hub: "Sao Jose dos Campos", totalAtend: "206", pctTotal: "3,80%", status: "✓ ACIMA", analise: "Acima da média" },
+  { posicao: "13", hub: "Lapa", totalAtend: "195", pctTotal: "3,60%", status: "✗ ABAIXO", analise: "Próximo da média" },
+  { posicao: "14", hub: "Barueri", totalAtend: "183", pctTotal: "3,40%", status: "✗ ABAIXO", analise: "Próximo da média" },
+  { posicao: "15", hub: "Praia Grande1", totalAtend: "177", pctTotal: "3,30%", status: "✗ ABAIXO", analise: "Performance moderada" },
+  { posicao: "16", hub: "Maua", totalAtend: "162", pctTotal: "3,00%", status: "✗ ABAIXO", analise: "Performance moderada" },
+  { posicao: "17", hub: "Guaruja", totalAtend: "150", pctTotal: "2,80%", status: "✗ ABAIXO", analise: "Performance moderada" },
+  { posicao: "18", hub: "Embu1", totalAtend: "148", pctTotal: "2,80%", status: "✗ ABAIXO", analise: "Performance moderada" },
+  { posicao: "19", hub: "Embu2", totalAtend: "107", pctTotal: "2,00%", status: "✗ ABAIXO", analise: "Necessita atenção" },
+  { posicao: "20", hub: "Adriana", totalAtend: "88", pctTotal: "1,60%", status: "✗ ABAIXO", analise: "Necessita atenção" },
+  { posicao: "21", hub: "Carandiru", totalAtend: "80", pctTotal: "1,50%", status: "✗ ABAIXO", analise: "Necessita atenção" },
+  { posicao: "22", hub: "Mooca1", totalAtend: "54", pctTotal: "1,00%", status: "✗ ABAIXO", analise: "Baixo volume" },
+  { posicao: "23", hub: "Mooca2", totalAtend: "49", pctTotal: "0,90%", status: "✗ ABAIXO", analise: "Baixo volume" },
+  { posicao: "24", hub: "Vila Guilherme", totalAtend: "48", pctTotal: "0,90%", status: "✗ ABAIXO", analise: "Baixo volume" },
   { posicao: "25", hub: "Guaratingueta", totalAtend: "41", pctTotal: "0,80%", status: "✗ ABAIXO", analise: "Baixo volume" },
-  { posicao: "26", hub: "Itapevi", totalAtend: "37", pctTotal: "0,70%", status: "✗ ABAIXO", analise: "Baixo volume" },
+  { posicao: "26", hub: "Itapevi", totalAtend: "38", pctTotal: "0,70%", status: "✗ ABAIXO", analise: "Baixo volume" },
   { posicao: "27", hub: "Registro", totalAtend: "27", pctTotal: "0,50%", status: "✗ ABAIXO", analise: "Baixo volume" },
 ]);
 
@@ -204,143 +206,186 @@ const [rankingHubsSheet, setRankingHubsSheet] = useState<any[]>([
     };
 
     // ============================================================
-    // CALLBACK: Atendimentos DD.40 (TODAS as metricas)
-    // CORRIGIDO v5: Adicionado logs + tratamento robusto
+    // CALLBACK: Atendimentos DD.40 (TODAS as métricas)
+    // CORRIGIDO v6: Detecção dinâmica de seções por header
+    //   - Não usa índice fixo de linha (matrizMedia[5]) → resiliente
+    //   - Pula coluna D (index 3) em Analistas, Semanas e Hubs
+    //   - Lê coluna H (index 7) = TEMPO EFETIVO/DIA
+    //
+    // ⚠️ IMPORTANTE: O Apps Script DEVE retornar range A:H (8 colunas).
+    //    Se retornar apenas A:G, tempoEfetivo fica vazio.
     // ============================================================
     (window as any).processarMediaAtendimentos = (matrizMedia: any) => {
-      console.log("[DD4.0 v5] processarMediaAtendimentos chamado. Tipo:", typeof matrizMedia, "É array?", Array.isArray(matrizMedia));
+      console.log("[DD4.0 v6] processarMediaAtendimentos chamado. Tipo:", typeof matrizMedia, "É array?", Array.isArray(matrizMedia));
 
       // Se recebeu um objeto de erro do Apps Script
       if (matrizMedia && !Array.isArray(matrizMedia) && matrizMedia.status === "error") {
-        console.error("[DD4.0 v5] Erro do Apps Script:", matrizMedia.message);
+        console.error("[DD4.0 v6] Erro do Apps Script:", matrizMedia.message);
         const scriptMedia = document.getElementById("script-media-google");
         if (scriptMedia) scriptMedia.remove();
         return;
       }
 
       if (!Array.isArray(matrizMedia) || matrizMedia.length < 6) {
-        console.error("[DD4.0 v5] matrizMedia invalida. Length:", matrizMedia?.length);
+        console.error("[DD4.0 v6] matrizMedia invalida. Length:", matrizMedia?.length);
         const scriptMedia = document.getElementById("script-media-google");
         if (scriptMedia) scriptMedia.remove();
         return;
       }
 
-      console.log("[DD4.0 v5] matrizMedia recebida com", matrizMedia.length, "linhas");
-      console.log("[DD4.0 v5] Linha 6 (metricas):", matrizMedia[5]);
+      console.log("[DD4.0 v6] matrizMedia recebida com", matrizMedia.length, "linhas");
 
-      // --- 1. MÉTRICAS GERAIS (linha 6, indice 5) ---
-      const valoresGerais = matrizMedia[5] || [];
-      const mediaDiaAnalistaVal = Number(String(valoresGerais[5] || '0').replace(',', '.')) || 0;
-      console.log("[DD4.0 v5] Media/Dia/Analista (F6):", valoresGerais[5], "→ parsed:", mediaDiaAnalistaVal);
-      setMediaAtendimentoAnalista(mediaDiaAnalistaVal);
+      // Helper: lê célula segura
+      const cell = (row: any[] | undefined, idx: number): string =>
+        String(row?.[idx] ?? '').trim();
 
-      setAtendGerais({
-        totalAtendimentos: String(valoresGerais[0] || '0'),
-        totalSemanas: String(valoresGerais[1] || '0'),
-        totalDiasUteis: String(valoresGerais[2] || '0'),
-        totalAnalistas: String(valoresGerais[3] || '0'),
-        mediaAtendDia: String(valoresGerais[4] || '0'),
-        mediaDiaAnalista: String(valoresGerais[5] || '0'),
-        mediaHoraAnalista: String(valoresGerais[6] || '0'),
-        tempoEfetivoDia: String(valoresGerais[7] || '0'),
-      });
+      // ─── Localizar seções por header (dinâmico, não hardcoded) ───
+      let idxMetricas  = -1;
+      let idxAnalistas = -1;
+      let idxSemanas   = -1;
+      let idxHubs      = -1;
 
-      // --- 2. RANKING POR ANALISTA ---
+      for (let i = 0; i < matrizMedia.length; i++) {
+        const c0 = cell(matrizMedia[i], 0).toUpperCase();
+        if (c0.includes('MÉTRICAS GERAIS') || c0.includes('METRICAS GERAIS'))  idxMetricas  = i;
+        else if (c0 === 'RANKING POR ANALISTA')                                idxAnalistas = i;
+        else if (c0.includes('DETALHAMENTO POR SEMANA'))                        idxSemanas   = i;
+        else if (c0 === 'RANKING POR HUB')                                      idxHubs      = i;
+      }
+
+      console.log("[DD4.0 v6] Seções encontradas → Métricas:", idxMetricas, "Analistas:", idxAnalistas, "Semanas:", idxSemanas, "Hubs:", idxHubs);
+
+      // ═══════════════════════════════════════════════════════════
+      // 1. MÉTRICAS GERAIS
+      //    Layout: [TÍTULO] → [HEADER] → [DATA]
+      //    Cols A-H: TotalAtend | TotalSem | TotalDias | Analistas |
+      //              MédAtend/Dia | Méd/Dia/Anal | Méd/Hora/Anal | TempoEfetivo
+      // ═══════════════════════════════════════════════════════════
+      if (idxMetricas >= 0) {
+        const valoresGerais = matrizMedia[idxMetricas + 2] || [];
+        console.log("[DD4.0 v6] Métricas gerais (row", idxMetricas + 2, "):", valoresGerais);
+
+        const mediaDiaAnalistaVal = Number(String(valoresGerais[5] || '0').replace(',', '.')) || 0;
+        setMediaAtendimentoAnalista(mediaDiaAnalistaVal);
+
+        setAtendGerais({
+          totalAtendimentos: cell(valoresGerais, 0) || '0',
+          totalSemanas:      cell(valoresGerais, 1) || '0',
+          totalDiasUteis:    cell(valoresGerais, 2) || '0',
+          totalAnalistas:    cell(valoresGerais, 3) || '0',
+          mediaAtendDia:     cell(valoresGerais, 4) || '0',
+          mediaDiaAnalista:  cell(valoresGerais, 5) || '0',
+          mediaHoraAnalista: cell(valoresGerais, 6) || '0',
+          tempoEfetivoDia:   cell(valoresGerais, 7) || '0',
+        });
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // 2. RANKING POR ANALISTA
+      //    Header: # | ANALISTA | TOTAL ATEND. | ATEND. dia(PULAR) | ATEND/DIA | %TOTAL | STATUS | TEMPO
+      //    Index:  0     1          2              3(SKIP)            4          5        6        7
+      // ═══════════════════════════════════════════════════════════
       const analistasTemp: any[] = [];
-      let emSecaoAnalista = false;
-      let pularLinhasAnalista = 0;
-      for (let i = 0; i < matrizMedia.length; i++) {
-        const primeiraCol = String(matrizMedia[i]?.[0] || '').trim();
-        if (primeiraCol === 'RANKING POR ANALISTA') {
-          emSecaoAnalista = true;
-          pularLinhasAnalista = 2;
-          continue;
-        }
-        if (emSecaoAnalista) {
-          if (pularLinhasAnalista > 0) { pularLinhasAnalista--; continue; }
-          if (!matrizMedia[i] || matrizMedia[i].length === 0 || primeiraCol === '' ||
-              primeiraCol === 'DETALHAMENTO POR SEMANA' || primeiraCol === 'RANKING POR HUB') {
-            emSecaoAnalista = false;
-            if (primeiraCol === 'DETALHAMENTO POR SEMANA' || primeiraCol === 'RANKING POR HUB') i--;
-            continue;
+      if (idxAnalistas >= 0) {
+        // Encontra o header procurando "ANALISTA" na coluna B
+        let headerIdx = -1;
+        for (let i = idxAnalistas + 1; i < Math.min(idxAnalistas + 6, matrizMedia.length); i++) {
+          if (cell(matrizMedia[i], 1).toUpperCase().includes('ANALISTA')) {
+            headerIdx = i;
+            break;
           }
-          const row = matrizMedia[i];
-          analistasTemp.push({
-            posicao: String(row[0] || ''),
-            nome: String(row[1] || ''),
-            totalAtend: String(row[2] || '0'),
-            atendDia: String(row[4] || '0'),
-            pctTotal: String(row[5] || '0%'),
-            status: String(row[6] || ''),
-            tempoEfetivo: String(row[7] || ''),
-          });
+        }
+        if (headerIdx >= 0) {
+          for (let i = headerIdx + 1; i < matrizMedia.length; i++) {
+            const row = matrizMedia[i];
+            if (!row || row.length === 0) break;
+            const nome = cell(row, 1);
+            if (!nome) break;
+            analistasTemp.push({
+              posicao:     cell(row, 0),
+              nome,
+              totalAtend:  cell(row, 2),
+              // ⚠️ PULA index 3 → coluna "ATEND. dia" (coluna nova)
+              atendDia:    cell(row, 4),
+              pctTotal:    cell(row, 5),
+              status:      cell(row, 6),
+              tempoEfetivo: cell(row, 7),
+            });
+          }
         }
       }
-      console.log("[DD4.0 v5] Analistas encontrados:", analistasTemp.length, analistasTemp.map(a => a.nome));
-      setRankingAnalistasSheet(analistasTemp);
+      console.log("[DD4.0 v6] Analistas encontrados:", analistasTemp.length, analistasTemp.map(a => a.nome));
+      if (analistasTemp.length > 0) setRankingAnalistasSheet(analistasTemp);
 
-      // --- 3. DETALHAMENTO POR SEMANA ---
+      // ═══════════════════════════════════════════════════════════
+      // 3. DETALHAMENTO POR SEMANA
+      //    Header: SEMANA | Nº ATEND. | % TOTAL | DESTAQUE(PULAR) | GAP vs MÉDIA | STATUS | ANÁLISE
+      //    Index:    0        1           2         3(SKIP)            4             5        6
+      // ═══════════════════════════════════════════════════════════
       const semanasTemp: any[] = [];
-      let emSecaoSemana = false;
-      let pularLinhasSemana = 0;
-      for (let i = 0; i < matrizMedia.length; i++) {
-        const primeiraCol = String(matrizMedia[i]?.[0] || '').trim();
-        if (primeiraCol === 'DETALHAMENTO POR SEMANA') {
-          emSecaoSemana = true;
-          pularLinhasSemana = 2;
-          continue;
-        }
-        if (emSecaoSemana) {
-          if (pularLinhasSemana > 0) { pularLinhasSemana--; continue; }
-          if (!matrizMedia[i] || matrizMedia[i].length === 0 || primeiraCol === '' ||
-              primeiraCol === 'RANKING POR HUB' || primeiraCol === 'RANKING POR ANALISTA') {
-            emSecaoSemana = false;
-            continue;
+      if (idxSemanas >= 0) {
+        let headerIdx = -1;
+        for (let i = idxSemanas + 1; i < Math.min(idxSemanas + 6, matrizMedia.length); i++) {
+          if (cell(matrizMedia[i], 0).toUpperCase().includes('SEMANA')) {
+            headerIdx = i;
+            break;
           }
-          const row = matrizMedia[i];
-          semanasTemp.push({
-            semana: String(row[0] || ''),
-            numAtend: String(row[1] || '0'),
-            pctTotal: String(row[2] || '0%'),
-            gap: String(row[4] || ''),
-            status: String(row[5] || ''),
-            analise: String(row[6] || ''),
-          });
+        }
+        if (headerIdx >= 0) {
+          for (let i = headerIdx + 1; i < matrizMedia.length; i++) {
+            const row = matrizMedia[i];
+            if (!row || row.length === 0) break;
+            const semana = cell(row, 0);
+            if (!semana || !semana.toLowerCase().startsWith('week')) break;
+            semanasTemp.push({
+              semana,
+              numAtend:  cell(row, 1),
+              pctTotal:  cell(row, 2),
+              // ⚠️ PULA index 3 → coluna "DESTAQUE"
+              gap:       cell(row, 4),
+              status:    cell(row, 5),
+              analise:   cell(row, 6),
+            });
+          }
         }
       }
-      console.log("[DD4.0 v5] Semanas encontradas:", semanasTemp.length);
-      setDetalheSemanas(semanasTemp);
+      console.log("[DD4.0 v6] Semanas encontradas:", semanasTemp.length);
+      if (semanasTemp.length > 0) setDetalheSemanas(semanasTemp);
 
-      // --- 4. RANKING POR HUB ---
+      // ═══════════════════════════════════════════════════════════
+      // 4. RANKING POR HUB
+      //    Header: # | HUB | TOTAL ATEND. | atend_dia(PULAR) | % TOTAL | STATUS | ANÁLISE
+      //    Index:  0    1       2             3(SKIP)            4        5        6
+      // ═══════════════════════════════════════════════════════════
       const hubsTemp: any[] = [];
-      let emSecaoHub = false;
-      let pularLinhasHub = 0;
-      for (let i = 0; i < matrizMedia.length; i++) {
-        const primeiraCol = String(matrizMedia[i]?.[0] || '').trim();
-        if (primeiraCol === 'RANKING POR HUB') {
-          emSecaoHub = true;
-          pularLinhasHub = 2;
-          continue;
-        }
-        if (emSecaoHub) {
-          if (pularLinhasHub > 0) { pularLinhasHub--; continue; }
-          if (!matrizMedia[i] || matrizMedia[i].length === 0 || primeiraCol === '') {
-            emSecaoHub = false;
-            continue;
+      if (idxHubs >= 0) {
+        let headerIdx = -1;
+        for (let i = idxHubs + 1; i < Math.min(idxHubs + 6, matrizMedia.length); i++) {
+          if (cell(matrizMedia[i], 1).toUpperCase().includes('HUB')) {
+            headerIdx = i;
+            break;
           }
-          const row = matrizMedia[i];
-          hubsTemp.push({
-            posicao: String(row[0] || ''),
-            hub: String(row[1] || ''),
-            totalAtend: String(row[2] || '0'),
-            pctTotal: String(row[4] || '0%'),
-            status: String(row[5] || ''),
-            analise: String(row[6] || ''),
-          });
+        }
+        if (headerIdx >= 0) {
+          for (let i = headerIdx + 1; i < matrizMedia.length; i++) {
+            const row = matrizMedia[i];
+            if (!row || row.length === 0) break;
+            const hub = cell(row, 1);
+            if (!hub) break;
+            hubsTemp.push({
+              posicao:    cell(row, 0),
+              hub,
+              totalAtend: cell(row, 2),
+              // ⚠️ PULA index 3 → coluna "0" / atend do dia
+              pctTotal:   cell(row, 4),
+              status:     cell(row, 5),
+              analise:    cell(row, 6),
+            });
+          }
         }
       }
-      console.log("[DD4.0 v5] HUBs encontrados:", hubsTemp.length);
-      setRankingHubsSheet(hubsTemp);
+      console.log("[DD4.0 v6] HUBs encontrados:", hubsTemp.length);
+      if (hubsTemp.length > 0) setRankingHubsSheet(hubsTemp);
 
       const scriptMedia = document.getElementById("script-media-google");
       if (scriptMedia) scriptMedia.remove();
@@ -368,12 +413,13 @@ const [rankingHubsSheet, setRankingHubsSheet] = useState<any[]>([
     script.src = urlFinal;
     script.async = true;
     script.onerror = () => {
-      console.error("[DD4.0 v5] Erro ao carregar script listarMotoristas");
+      console.error("[DD4.0 v6] Erro ao carregar script listarMotoristas");
       setStatus("❌ Erro na conexao com o servidor. Recarregue a pagina.");
     };
     document.body.appendChild(script);
 
     // Segunda chamada JSONP para buscar dados completos da aba "Atendimentos DD.40"
+    // ⚠️ O Apps Script DEVE retornar range A:H (8 colunas), NÃO A:G
     const scriptMediaVelho = document.getElementById("script-media-google");
     if (scriptMediaVelho) scriptMediaVelho.remove();
     const urlMedia = `${appsScriptUrl}?action=buscarMediaAtendimentos&callback=processarMediaAtendimentos&_=${new Date().getTime() + 1}`;
@@ -382,14 +428,14 @@ const [rankingHubsSheet, setRankingHubsSheet] = useState<any[]>([
     scriptMedia.src = urlMedia;
     scriptMedia.async = true;
     scriptMedia.onerror = () => {
-      console.error("[DD4.0 v5] Erro ao carregar script buscarMediaAtendimentos. Verifique se o Apps Script foi atualizado.");
+      console.error("[DD4.0 v6] Erro ao carregar script buscarMediaAtendimentos. Verifique se o Apps Script foi atualizado.");
     };
     document.body.appendChild(scriptMedia);
 
     // Timeout de seguranca: se depois de 15s os dados nao chegaram, avisar
     setTimeout(() => {
       if (mediaAtendimentoAnalista === 0 && !atendGerais) {
-        console.warn("[DD4.0 v5] TIMEOUT: Dados da aba Atendimentos DD.40 nao foram recebidos em 15s. O Apps Script pode nao ter sido atualizado/reimplantado.");
+        console.warn("[DD4.0 v6] TIMEOUT: Dados da aba Atendimentos DD.40 nao foram recebidos em 15s. O Apps Script pode nao ter sido atualizado/reimplantado.");
       }
     }, 15000);
   };
@@ -733,7 +779,7 @@ const [rankingHubsSheet, setRankingHubsSheet] = useState<any[]>([
         <AiChat
           dadosOperacao={{
             resumo: {
-              mediaAtendimentos: atendGerais?.mediaDiaAnalista || "9,8",
+              mediaAtendimentos: atendGerais?.mediaDiaAnalista || "9,9",
               totalAtendimentos: atendGerais?.totalAtendimentos || "0",
               sla: atendGerais?.tempoEfetivoDia || "—",
               totalAnalistas: atendGerais?.totalAnalistas || "0",

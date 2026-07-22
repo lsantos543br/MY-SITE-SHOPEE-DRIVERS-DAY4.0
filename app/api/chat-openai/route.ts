@@ -10,6 +10,8 @@ export async function POST(req: Request) {
   try {
     const { question, history } = await req.json();
 
+    type ChatHistoryItem = { role?: string; content?: string };
+
     const metricasConsolidadas = {
       totalDisparos: "6.483",
       taxaResposta: "79.1% (5.127 Leads)",
@@ -34,13 +36,13 @@ export async function POST(req: Request) {
       - Responda em português brasileiro e de forma curta (máximo 3 parágrafos).
     `;
 
-    const ultimasMensagens = (history || []).slice(-2); 
+    const ultimasMensagens: ChatHistoryItem[] = Array.isArray(history) ? history.slice(-2) : [];
     const messages = [
-      ...ultimasMensagens.map((h: any) => ({
+      ...ultimasMensagens.map((h) => ({
         role: h.role === "assistant" ? ("assistant" as const) : ("user" as const),
-        content: h.content,
+        content: String(h.content ?? ""),
       })),
-      { role: "user" as const, content: question }
+      { role: "user" as const, content: String(question ?? "") }
     ];
 
     // Chamada usando o modelo Llama 3.2 que é amplamente suportado
@@ -53,10 +55,11 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ answer: text });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
     console.error("Erro na rota do Hugging Face:", error);
     return NextResponse.json(
-      { error: error.message || "Erro interno ao processar via Hugging Face" },
+      { error: msg || "Erro interno ao processar via Hugging Face" },
       { status: 500 }
     );
   }

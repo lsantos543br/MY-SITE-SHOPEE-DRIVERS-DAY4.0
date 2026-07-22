@@ -11,7 +11,7 @@ interface Message {
 }
 
 interface AiChatProps {
-  dadosOperacao: any;
+  dadosOperacao: unknown;
 }
 
 // ── Sugestões rápidas para o gestor ────────────────────────────────────────
@@ -175,8 +175,9 @@ export default function AiChat({ dadosOperacao }: AiChatProps) {
         };
 
         setMessages((prev) => [...prev, assistantMsg]);
-      } catch (err: any) {
-        setError(err.message || "Erro de conexão ao tentar processar sua pergunta");
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        setError(message || "Erro de conexão ao tentar processar sua pergunta");
       } finally {
         setIsLoading(false);
       }
