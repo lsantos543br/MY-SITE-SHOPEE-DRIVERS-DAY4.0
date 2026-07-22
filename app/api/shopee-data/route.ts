@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
-import key from "../../../google-key.json";
 
 export const runtime = "nodejs";
 
@@ -13,10 +12,32 @@ const MOTORISTAS_RANGE = process.env.GOOGLE_SHEETS_MOTORISTAS_RANGE || "Base aut
 const METRICAS_RANGE = process.env.GOOGLE_SHEETS_METRICAS_RANGE || "Atendimentos DD.40!A1:Z1000";
 
 async function getSheetsService() {
+  let credentials: { client_email?: string; private_key?: string } = {};
+
+  // 1. Tenta pegar o JSON completo das variáveis de ambiente se configurado
+  const jsonKey = process.env.GOOGLE_CREDENTIALS || process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  if (jsonKey) {
+    try {
+      credentials = JSON.parse(jsonKey);
+    } catch {
+      console.warn("[shopee-data] Falha ao parsear GOOGLE_CREDENTIALS em JSON.");
+    }
+  }
+
+  // 2. Se não houver JSON completo, usa as variáveis de ambiente individuais
+  if (!credentials.client_email) {
+    credentials.client_email = process.env.GOOGLE_CLIENT_EMAIL;
+  }
+  if (!credentials.private_key) {
+    // Trata quebras de linha que o Vercel ou o .env podem formatar como '\n' literal
+    credentials.private_key = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  }
+
   const auth = new google.auth.GoogleAuth({
-    credentials: key as unknown as Record<string, unknown>,
+    credentials,
     scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
   });
+
   return google.sheets({ version: "v4", auth });
 }
 
@@ -141,7 +162,7 @@ const SAMPLE_LISTAR_MOTORISTAS = [
 
 const SAMPLE_BUSCAR_MEDIA_ATENDIMENTOS = [
   ["RANKING POR ANALISTA"],
-  ["Posição", "Analista", "Total", "Col4", "Col5", "%Total", "Status", "Tempo"] ,
+  ["Posição", "Analista", "Total", "Col4", "Col5", "%Total", "Status", "Tempo"],
   ["1", "Analista Exemplo", "12", "", "", "80%", "Ativo", "00:45"],
   ["DETALHAMENTO POR SEMANA"],
   ["Semana", "Atend", "%Total", "", "Gap", "Status", "Análise"],
@@ -201,12 +222,10 @@ async function parseRequestBody(request: NextRequest) {
     try {
       return JSON.parse(text);
     } catch {
-      // If incoming JSON was PowerShell-escaped like {\"action\":\"listarMotoristas\"}
       const unescaped = text.replace(/\\"/g, '"');
       try {
         return JSON.parse(unescaped);
       } catch {
-        // fallback to form body parsing
         if (contentType.includes("application/x-www-form-urlencoded") || /^[^=&]+=[^=&]+/.test(text)) {
           return Object.fromEntries(new URLSearchParams(text));
         }
