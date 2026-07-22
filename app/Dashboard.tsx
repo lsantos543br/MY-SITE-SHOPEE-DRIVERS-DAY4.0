@@ -495,7 +495,7 @@ export default function Dashboard({
           <div className={`p-4 rounded-2xl border flex items-center gap-3 ${estilo.card}`}>
             <div className="p-2.5 rounded-xl bg-zinc-500/10 text-zinc-500 shrink-0"><Activity className="w-5 h-5" /></div>
             <div className="min-w-0">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[#18181b] leading-tight">TOTAL APROXIMADO DISPAROS REALIZADOS</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[#18181b] leading-tight">TOTAL APROXIMADO DE DISPAROS REALIZADOS</p>
               <h3 className="text-xl 2xl:text-2xl font-black mt-0.5 tracking-tight flex items-baseline gap-1.5">
                 <span style={{ color: '#18181b' }}>{Number(disparosEfetivos || 0).toLocaleString("pt-BR")}</span>
                 <span className="text-[11px] font-bold text-zinc-500">/ 100%</span>
