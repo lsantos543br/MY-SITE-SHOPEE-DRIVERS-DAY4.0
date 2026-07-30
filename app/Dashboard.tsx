@@ -487,7 +487,7 @@ export default function Dashboard({
           </div>
         </div>
 
-        {/* ============================================================ */}
+     {/* ============================================================ */}
         {/* CARDS PRINCIPAIS — LANDSCAPE: 6 em uma unica linha em telas largas */}
         {/* ============================================================ */}
         <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-6 gap-3 landscape-6-cols">
@@ -497,8 +497,7 @@ export default function Dashboard({
             <div className="min-w-0">
               <p className="text-[11px] font-bold uppercase tracking-wider text-[#18181b] leading-tight">TOTAL APROXIMADO DE DISPAROS REALIZADOS</p>
               <h3 className="text-xl 2xl:text-2xl font-black mt-0.5 tracking-tight flex items-baseline gap-1.5">
-                <span style={{ color: '#18181b' }}>{Number(disparosEfetivos || 0).toLocaleString("pt-BR")}</span>
-                <span className="text-[11px] font-bold text-zinc-500">/ 100%</span>
+                <span style={{ color: '#18181b' }}>0</span>
               </h3>
             </div>
           </div>
@@ -509,7 +508,7 @@ export default function Dashboard({
               <p className="text-[11px] font-bold uppercase tracking-wider text-[#18181b] leading-tight">Leads Responderam</p>
               <h3 className="text-xl 2xl:text-2xl font-black mt-0.5 tracking-tight flex items-baseline gap-1.5">
                 <span style={{ color: '#18181b' }}>{totalLeads}</span>
-                <span className="text-[11px] font-bold text-orange-500">/ {disparosEfetivos > 0 ? ((totalLeads / disparosEfetivos) * 100).toFixed(1) : "0.0"}%</span>
+                <span className="text-[11px] font-bold text-orange-500">/ 100%</span>
               </h3>
             </div>
           </div>
@@ -526,8 +525,8 @@ export default function Dashboard({
                   }).length}
                 </span>
                 <span className="text-[11px] font-bold text-purple-600">
-                  / {disparosEfetivos > 0
-                    ? ((dadosEfetivos.filter(m => { const st = String(m.status || m.Status || '').trim().toLowerCase(); return (st === "ag. integração/treinamento" || st === "ag. integracao/treinamento" || st === "não compareceu" || st === "nao compareceu" || st === "ag. first trip" || st === "first trip em atraso" || st === "sem vagas hub" || st === "first trip efetuada" || st === "efetuada" || st === ""); }).length / disparosEfetivos) * 100).toFixed(1) : "0.0"}%
+                  / {totalLeads > 0
+                    ? ((dadosEfetivos.filter(m => { const st = String(m.status || m.Status || '').trim().toLowerCase(); return (st === "ag. integração/treinamento" || st === "ag. integracao/treinamento" || st === "não compareceu" || st === "nao compareceu" || st === "ag. first trip" || st === "first trip em atraso" || st === "sem vagas hub" || st === "first trip efetuada" || st === "efetuada" || st === ""); }).length / totalLeads) * 100).toFixed(1) : "0.0"}%
                 </span>
               </h3>
             </div>
@@ -542,7 +541,7 @@ export default function Dashboard({
                   {dadosEfetivos.filter(m => { const st = String(m.status || m.Status || '').trim().toLowerCase(); return (st === "first trip efetuada" || st === "efetuada" || st === "ag. first trip" || st === "first trip em atraso" || st === "atraso" || st === ""); }).length}
                 </span>
                 <span className="text-[11px] font-bold text-blue-500">
-                  / {(() => { const c = dadosEfetivos.filter(m => { const st = String(m.status || m.Status || '').trim().toLowerCase(); return (st === "first trip efetuada" || st === "efetuada" || st === "ag. first trip" || st === "first trip em atraso" || st === "atraso" || st === ""); }).length; return disparosEfetivos > 0 ? ((c / disparosEfetivos) * 100).toFixed(1) : "0.0"; })()}%
+                  / {(() => { const c = dadosEfetivos.filter(m => { const st = String(m.status || m.Status || '').trim().toLowerCase(); return (st === "first trip efetuada" || st === "efetuada" || st === "ag. first trip" || st === "first trip em atraso" || st === "atraso" || st === ""); }).length; return totalLeads > 0 ? ((c / totalLeads) * 100).toFixed(1) : "0.0"; })()}%
                 </span>
               </h3>
             </div>
@@ -554,7 +553,7 @@ export default function Dashboard({
               <p className="text-[11px] font-bold uppercase tracking-wider text-[#0046B5] leading-tight">First Trip Efetuada</p>
               <h3 className="text-xl 2xl:text-2xl font-black mt-0.5 tracking-tight flex items-baseline gap-1.5">
                 <span style={{ color: '#18181b' }}>{totalFirstTrip}</span>
-                <span className="text-[11px] font-bold text-emerald-500">/ {disparosEfetivos > 0 ? ((totalFirstTrip / disparosEfetivos) * 100).toFixed(1) : "0.0"}%</span>
+                <span className="text-[11px] font-bold text-emerald-500">/ {totalLeads > 0 ? ((totalFirstTrip / totalLeads) * 100).toFixed(1) : "0.0"}%</span>
               </h3>
             </div>
           </div>
@@ -576,27 +575,27 @@ export default function Dashboard({
           </div>
         </div>
 
-        {/* TAXAS DE CONVERSAO — 5 MINI-CARDS */}
+       {/* TAXAS DE CONVERSAO — 5 MINI-CARDS */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           {(() => {
-            const tDisparos = Number(disparosEfetivos || 0);
+            const tLeads = totalLeads || 0;
             const tAgendados = dadosEfetivos.filter(m => { const st = String(m.status || m.Status || '').trim().toLowerCase(); return (st === "ag. integração/treinamento" || st === "ag. integracao/treinamento" || st === "não compareceu" || st === "nao compareceu" || st === "sem vagas hub" || st === "ag. first trip" || st === "first trip em atraso" || st === "first trip efetuada" || st === "efetuada" || st === ""); }).length;
             const tCompareceram = dadosEfetivos.filter(m => { const st = String(m.status || m.Status || '').trim().toLowerCase(); return (st === "first trip efetuada" || st === "efetuada" || st === "ag. first trip" || st === "first trip em atraso" || st === "atraso" || st === ""); }).length;
             const tNaoCompareceram = dadosEfetivos.filter(m => { const st = String(m.status || m.Status || '').trim().toLowerCase(); return st.includes("nao compareceu") || st.includes("não compareceu"); }).length;
             const tFirstTrip = totalFirstTrip || 0;
 
-            const taxaRespostaDisparos = tDisparos > 0 ? ((totalLeads / tDisparos) * 100) : 0;
-            const taxaAgendamentoDisparos = tDisparos > 0 ? ((tAgendados / tDisparos) * 100) : 0;
-            const taxaComparecimentoDisparos = tDisparos > 0 ? ((tCompareceram / tDisparos) * 100) : 0;
-            const taxaFirstTripDisparos = tDisparos > 0 ? ((tFirstTrip / tDisparos) * 100) : 0;
-            const taxaNaoCompareceuDisparos = tDisparos > 0 ? ((tNaoCompareceram / tDisparos) * 100) : 0;
+            const taxaResposta = 100; // Define os Leads Responderam como 100% de base
+            const taxaAgendamento = tLeads > 0 ? ((tAgendados / tLeads) * 100) : 0;
+            const taxaComparecimento = tLeads > 0 ? ((tCompareceram / tLeads) * 100) : 0;
+            const taxaFirstTrip = tLeads > 0 ? ((tFirstTrip / tLeads) * 100) : 0;
+            const taxaNaoCompareceu = tLeads > 0 ? ((tNaoCompareceram / tLeads) * 100) : 0;
 
             const minicards = [
-              { titulo: "Taxa de Resposta", subtitulo: "Leads / Disparos", valor: taxaRespostaDisparos, cor: "text-orange-600", bordaCor: "border-orange-500/30", bgCor: "bg-orange-500/5" },
-              { titulo: "Taxa de Agendamento", subtitulo: "Agendados / Disparos", valor: taxaAgendamentoDisparos, cor: "text-purple-600", bordaCor: "border-purple-500/30", bgCor: "bg-purple-500/5" },
-              { titulo: "Taxa de Comparecimento", subtitulo: "Compareceram / Disparos", valor: taxaComparecimentoDisparos, cor: "text-blue-600", bordaCor: "border-blue-500/30", bgCor: "bg-blue-500/5" },
-              { titulo: "Taxa de First Trip", subtitulo: "First Trip / Disparos", valor: taxaFirstTripDisparos, cor: "text-emerald-600", bordaCor: "border-emerald-500/30", bgCor: "bg-emerald-500/5" },
-              { titulo: "Nao Comparecimento", subtitulo: "Ausentes / Disparos", valor: taxaNaoCompareceuDisparos, cor: "text-red-600", bordaCor: "border-red-500/30", bgCor: "bg-red-500/5" },
+              { titulo: "Taxa de Resposta", subtitulo: "Leads Base", valor: taxaResposta, cor: "text-orange-600", bordaCor: "border-orange-500/30", bgCor: "bg-orange-500/5" },
+              { titulo: "Taxa de Agendamento", subtitulo: "Agendados / Leads", valor: taxaAgendamento, cor: "text-purple-600", bordaCor: "border-purple-500/30", bgCor: "bg-purple-500/5" },
+              { titulo: "Taxa de Comparecimento", subtitulo: "Compareceram / Leads", valor: taxaComparecimento, cor: "text-blue-600", bordaCor: "border-blue-500/30", bgCor: "bg-blue-500/5" },
+              { titulo: "Taxa de First Trip", subtitulo: "First Trip / Leads", valor: taxaFirstTrip, cor: "text-emerald-600", bordaCor: "border-emerald-500/30", bgCor: "bg-emerald-500/5" },
+              { titulo: "Nao Comparecimento", subtitulo: "Ausentes / Leads", valor: taxaNaoCompareceu, cor: "text-red-600", bordaCor: "border-red-500/30", bgCor: "bg-red-500/5" },
             ];
 
             const coresInline: Record<string, string> = {
