@@ -58,46 +58,97 @@ export default function Dashboard({
 
   const [temaEscuro, setTemaEscuro] = useState(false);
 
-  // ANALISTAS OCULTOS
-  const nomesAnalistasOcultos = ['barbara targino'];
-  const normalizarNomeAnalista = (nome: any) => String(nome || '').trim().toLowerCase();
-  const analistaEstaOculto = (nome: any) => nomesAnalistasOcultos.includes(normalizarNomeAnalista(nome));
-  const opcoesAnalistasVisiveis = opcoesAnalistas.filter(a => !analistaEstaOculto(a));
+  // Regras alinhadas à Base automatica: desligadas não entram nas métricas;
+  // São Bernardo é atribuído à Cassia e Jurubatuba ao Leandro Menezes.
+  const normalizarTexto = (valor: any) => String(valor || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+
+  const analistasDesligados = [
+    'catharina', 'catharina rodrigues', 'barbara', 'barbara targino'
+  ];
+
+  const analistaEstaDesligado = (nome: any) =>
+    analistasDesligados.includes(normalizarTexto(nome));
+
+  const obterHubRegistro = (registro: any) => String(
+    registro?.hub || registro?.Hub || registro?.filial || registro?.Filial || ''
+  ).trim();
+
+  const obterAnalistaRegistro = (registro: any) => String(
+    registro?.analyst || registro?.analista || registro?.Analyst || registro?.Analista || ''
+  ).trim();
+
+  const obterResponsavelFinal = (hub: any, analistaOriginal: any) => {
+    const hubNormalizado = normalizarTexto(hub);
+    if (hubNormalizado === 'sao bernardo' || hubNormalizado === 'sao bernardo do campo') return 'Cassia';
+    if (hubNormalizado === 'jurubatuba') return 'Leandro Menezes';
+    if (analistaEstaDesligado(analistaOriginal)) return '';
+    return String(analistaOriginal || '').trim();
+  };
+
+  // Ajusta a fonte uma única vez; os componentes e o layout permanecem inalterados.
+  const listaDadosAjustada = useMemo(() => listaFiltradaDash
+    .map((registro: any) => {
+      if (!registro) return null;
+      const responsavelFinal = obterResponsavelFinal(
+        obterHubRegistro(registro),
+        obterAnalistaRegistro(registro)
+      );
+      if (!responsavelFinal) return null;
+      return {
+        ...registro,
+        analyst: responsavelFinal,
+        analista: responsavelFinal,
+        Analyst: responsavelFinal,
+        Analista: responsavelFinal
+      };
+    })
+    .filter(Boolean), [listaFiltradaDash]);
+
+  const opcoesAnalistasVisiveis = useMemo(() => Array.from(new Set(
+    listaDadosAjustada
+      .map((registro: any) => obterAnalistaRegistro(registro))
+      .filter((nome: string) => nome && !analistaEstaDesligado(nome))
+  )).sort((a, b) => a.localeCompare(b)), [listaDadosAjustada]);
 
   // TRATAMENTO DOS ARRAYS SELECIONADOS
   const hubsSelecionados =
     filtroHub && filtroHub !== "TODOS" && filtroHub.trim() !== ""
-      ? filtroHub.split(',').map(x => x.trim().toLowerCase())
+      ? filtroHub.split(',').map(x => normalizarTexto(x))
       : [];
 
   const modaisSelecionados =
     filtroModal && filtroModal !== "TODOS" && filtroModal.trim() !== ""
-      ? filtroModal.split(',').map(x => x.trim().toLowerCase())
+      ? filtroModal.split(',').map(x => normalizarTexto(x))
       : [];
 
   const semanasSelecionadas =
     filtroSemana && filtroSemana !== "TODOS" && filtroSemana.trim() !== ""
-      ? filtroSemana.split(',').map(x => x.trim().toLowerCase())
+      ? filtroSemana.split(',').map(x => normalizarTexto(x))
       : [];
 
   const analistasSelecionados =
     filtroAnalista && filtroAnalista !== "TODOS" && filtroAnalista.trim() !== ""
-      ? filtroAnalista.split(',').map(x => x.trim().toLowerCase()).filter(x => !analistaEstaOculto(x))
+      ? filtroAnalista.split(',').map(x => normalizarTexto(x)).filter(x => !analistaEstaDesligado(x))
       : [];
 
   // FILTRAGEM ACUMULATIVA
-  const dadosEfetivos = useMemo(() => listaFiltradaDash.filter(m => {
+  const dadosEfetivos = useMemo(() => listaDadosAjustada.filter(m => {
     if (!m) return false;
-    const valorHub = String(m.hub || m.Hub || m.filial || m.Filial || '').trim().toLowerCase();
+    const valorHub = normalizarTexto(obterHubRegistro(m));
     const matchHub = hubsSelecionados.length === 0 || hubsSelecionados.includes(valorHub);
-    const valorModal = String(m.modal || m.veiculo || m.Modal || '').trim().toLowerCase();
+    const valorModal = normalizarTexto(m.modal || m.veiculo || m.Modal || '');
     const matchModal = modaisSelecionados.length === 0 || modaisSelecionados.includes(valorModal);
-    const valorSemana = String(m.weekend || m.semana || m.Weekend || m.Semana || '').trim().toLowerCase();
+    const valorSemana = normalizarTexto(m.weekend || m.semana || m.Weekend || m.Semana || '');
     const matchSemana = semanasSelecionadas.length === 0 || semanasSelecionadas.includes(valorSemana);
-    const valorAnalista = String(m.analyst || m.analista || m.Analyst || m.Analista || '').trim().toLowerCase();
+    const valorAnalista = normalizarTexto(obterAnalistaRegistro(m));
     const matchAnalista = analistasSelecionados.length === 0 || analistasSelecionados.includes(valorAnalista);
     return matchHub && matchModal && matchSemana && matchAnalista;
-  }), [listaFiltradaDash, hubsSelecionados, modaisSelecionados, semanasSelecionadas, analistasSelecionados]);
+  }), [listaDadosAjustada, hubsSelecionados, modaisSelecionados, semanasSelecionadas, analistasSelecionados]);
 
   const totalLeads = dadosEfetivos.length;
 
@@ -262,7 +313,7 @@ export default function Dashboard({
       if (!_matrizHubSemana[hb]) _matrizHubSemana[hb] = {};
       _matrizHubSemana[hb][sem] = (_matrizHubSemana[hb][sem] || 0) + 1;
 
-      if (!analistaEstaOculto(ana)) {
+      if (!analistaEstaDesligado(ana)) {
         if (!_matrizAnalistaSemana[ana]) _matrizAnalistaSemana[ana] = {};
         _matrizAnalistaSemana[ana][sem] = (_matrizAnalistaSemana[ana][sem] || 0) + 1;
       }
@@ -688,7 +739,7 @@ export default function Dashboard({
                       const st = String(m?.status || m?.Status || '').trim().toLowerCase();
                       if (st === "first trip efetuada" || st.includes("first trip efetuada") || st === "efetuada") {
                         const nomeAnalista = String(m?.analyst || m?.analista || m?.Analyst || m?.Analista || 'Nao Informado').trim();
-                        if (!analistaEstaOculto(nomeAnalista)) { contagem[nomeAnalista] = (contagem[nomeAnalista] || 0) + 1; totalGeralFT++; }
+                        if (!analistaEstaDesligado(nomeAnalista)) { contagem[nomeAnalista] = (contagem[nomeAnalista] || 0) + 1; totalGeralFT++; }
                       }
                     });
                   }

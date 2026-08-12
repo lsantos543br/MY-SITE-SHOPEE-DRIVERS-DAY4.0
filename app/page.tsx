@@ -405,7 +405,7 @@ const [rankingHubsSheet, setRankingHubsSheet] = useState<any[]>([
     const scriptVelho = document.getElementById("script-conexao-google");
     if (scriptVelho) scriptVelho.remove();
 
-    const appsScriptUrl = "https://script.google.com/a/macros/shopee.com/s/AKfycbzzeABmBcN78oJI9sWOsMqEG2Nr5RL2Roj9rmJQhPV7t2Q5RNr5OEd1ec2VniQXthmI/exec";
+    const appsScriptUrl = "https://script.google.com/a/macros/shopee.com/s/AKfycbwxUFV5pjea10eIDEDh6_udBHIOO2p-jy_F_b7Dq4lidneymNgZHs6gkTnDlRsrMOPq/exec";
     const urlFinal = `${appsScriptUrl}?action=listarMotoristas&callback=processarDadosPlanilha&_=${new Date().getTime()}`;
 
     const script = document.createElement("script");
@@ -445,7 +445,7 @@ const [rankingHubsSheet, setRankingHubsSheet] = useState<any[]>([
     if (!motoristaSelecionado) return;
 
     setSalvandoTratamento(true);
-    const appsScriptUrl = "https://script.google.com/a/macros/shopee.com/s/AKfycbxvAn4kvKNlkCH5klqipLNJ7Q8pEEvGyHxo5R0fDWFm3Jh1pSJyZzM8d-L94-N5cASR/exec";
+    const appsScriptUrl = "https://script.google.com/a/macros/shopee.com/s/AKfycbwxUFV5pjea10eIDEDh6_udBHIOO2p-jy_F_b7Dq4lidneymNgZHs6gkTnDlRsrMOPq/exec";
 
     const parametros = new URLSearchParams({
       action: "salvarTratamento",
