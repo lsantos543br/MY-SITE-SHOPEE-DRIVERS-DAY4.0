@@ -63,13 +63,24 @@ export default function Dashboard({
   const normalizarTexto = (valor: any) => String(valor || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, ' ')
+    .replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF\u2000-\u200A\u202F\u205F\u3000]+/g, ' ')
     .trim()
     .toLowerCase();
 
   const analistasDesligados = [
     'catharina', 'catharina rodrigues', 'barbara', 'barbara targino'
   ];
+
+  // Resolução de aliases: unifica variações de nome para o nome canônico.
+  // Usa match por padrão (contains) para ser robusto contra variações inesperadas.
+  const resolverAlias = (nome: string): string => {
+    const chave = normalizarTexto(nome);
+    // Se contém "leandro" E "menezes" em qualquer forma, é o mesmo analista
+    if (chave.includes('leandro') && chave.includes('menezes')) return 'Leandro Menezes';
+    // Adicione outros aliases aqui conforme necessário:
+    // if (chave.includes('xxx') && chave.includes('yyy')) return 'Nome Canonico';
+    return nome;
+  };
 
   const analistaEstaDesligado = (nome: any) =>
     analistasDesligados.includes(normalizarTexto(nome));
@@ -87,7 +98,8 @@ export default function Dashboard({
     if (hubNormalizado === 'sao bernardo' || hubNormalizado === 'sao bernardo do campo') return 'Cassia';
     if (hubNormalizado === 'jurubatuba') return 'Leandro Menezes';
     if (analistaEstaDesligado(analistaOriginal)) return '';
-    return String(analistaOriginal || '').trim();
+    const nomeLimpo = String(analistaOriginal || '').trim();
+    return resolverAlias(nomeLimpo);
   };
 
   // Ajusta a fonte uma única vez; os componentes e o layout permanecem inalterados.
@@ -240,6 +252,31 @@ export default function Dashboard({
     semanasOrdenadas.map(s => s.name).length > 0
       ? semanasOrdenadas.map(s => s.name)
       : opcoesSemanas.filter(s => s && s !== "TODOS");
+
+  // NORMALIZAÇÃO DO RANKING DE ANALISTAS DA PLANILHA (merge duplicatas por alias)
+  const rankingAnalistasSheetNorm = useMemo(() => {
+    if (!rankingAnalistasSheet || rankingAnalistasSheet.length === 0) return [];
+    const agrupado: Record<string, any> = {};
+    rankingAnalistasSheet.forEach((a: any) => {
+      const nomeCanon = resolverAlias(String(a.nome || '').trim());
+      if (!agrupado[nomeCanon]) {
+        agrupado[nomeCanon] = { ...a, nome: nomeCanon };
+      } else {
+        // Soma totalAtend numérico
+        const existente = agrupado[nomeCanon];
+        const numExist = Number(String(existente.totalAtend || '0').replace(/\./g, '').replace(',', '.'));
+        const numNovo = Number(String(a.totalAtend || '0').replace(/\./g, '').replace(',', '.'));
+        existente.totalAtend = numExist + numNovo;
+      }
+    });
+    const lista = Object.values(agrupado).sort((a: any, b: any) => {
+      const na = Number(String(a.totalAtend || '0').toString().replace(/\./g, '').replace(',', '.'));
+      const nb = Number(String(b.totalAtend || '0').toString().replace(/\./g, '').replace(',', '.'));
+      return nb - na;
+    });
+    lista.forEach((item: any, idx: number) => { item.posicao = idx + 1; });
+    return lista;
+  }, [rankingAnalistasSheet]);
 
   // PERFORMANCE DOS ANALISTAS (memoized)
   const rankingConversao = useMemo(() => opcoesAnalistasVisiveis
@@ -1129,11 +1166,11 @@ export default function Dashboard({
                 <h4 className="text-xs font-black uppercase tracking-wider text-amber-600">Scorecard Executivo</h4>
               </div>
               <div className="space-y-2.5">
-                {rankingAnalistasSheet.length > 0 && (
+                {rankingAnalistasSheetNorm.length > 0 && (
                   <div className="p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/10">
                     <p className="text-[10px] font-bold uppercase text-amber-700 mb-0.5">Top 1 Analista</p>
-                    <p className="text-base font-black text-slate-800">{rankingAnalistasSheet[0]?.nome}</p>
-                    <p className="text-[11px] text-slate-500">{rankingAnalistasSheet[0]?.totalAtend} atend. | {rankingAnalistasSheet[0]?.atendDia}/dia | {rankingAnalistasSheet[0]?.tempoEfetivo}</p>
+                    <p className="text-base font-black text-slate-800">{rankingAnalistasSheetNorm[0]?.nome}</p>
+                    <p className="text-[11px] text-slate-500">{rankingAnalistasSheetNorm[0]?.totalAtend} atend. | {rankingAnalistasSheetNorm[0]?.atendDia}/dia | {rankingAnalistasSheetNorm[0]?.tempoEfetivo}</p>
                   </div>
                 )}
                 {rankingHubsSheet.length > 0 && (
@@ -1180,7 +1217,7 @@ export default function Dashboard({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-200">
-                  {rankingAnalistasSheet.length > 0 ? rankingAnalistasSheet.map((a: any, i: number) => (
+                  {rankingAnalistasSheetNorm.length > 0 ? rankingAnalistasSheetNorm.map((a: any, i: number) => (
                     <tr key={i} className="hover:bg-zinc-50 transition-colors">
                       <td className="p-2 font-black text-slate-700">{a.posicao}</td>
                       <td className="p-2 font-bold text-slate-800">{a.nome}</td>
