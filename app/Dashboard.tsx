@@ -59,7 +59,7 @@ export default function Dashboard({
   const [temaEscuro, setTemaEscuro] = useState(false);
 
   // Regras alinhadas à Base automatica: desligadas não entram nas métricas;
-  // São Bernardo é atribuído à Cassia e Jurubatuba ao Leandro Menezes.
+  // São Bernardo é atribuído à Cassia e Jurubatuba à Valeria.
   const normalizarTexto = (valor: any) => String(valor || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -75,10 +75,20 @@ export default function Dashboard({
   // Usa match por padrão (contains) para ser robusto contra variações inesperadas.
   const resolverAlias = (nome: string): string => {
     const chave = normalizarTexto(nome);
-    // Se contém "leandro" E "menezes" em qualquer forma, é o mesmo analista
+    if (!chave) return nome;
+    // Leandro Menezes (qualquer variação com "leandro" + "menezes")
     if (chave.includes('leandro') && chave.includes('menezes')) return 'Leandro Menezes';
-    // Adicione outros aliases aqui conforme necessário:
-    // if (chave.includes('xxx') && chave.includes('yyy')) return 'Nome Canonico';
+    // Leandro Andrade (qualquer variação com "leandro" + "andrade")
+    if (chave.includes('leandro') && chave.includes('andrade')) return 'Leandro Andrade';
+    // Deilze / Deise (qualquer variação)
+    if (chave.includes('deilze') || chave.includes('deise') || chave.includes('vilaca da silva')) return 'Deilze';
+    // Cassia (qualquer variação)
+    if (chave.includes('cassia') && chave.includes('jesus')) return 'Cassia';
+    if (chave === 'cassia') return 'Cassia';
+    // Jaqueline (qualquer variação)
+    if (chave.includes('jaqueline')) return 'Jaqueline';
+    // Valeria (qualquer variação — "valéria" e "valeria" ficam iguais após normalizarTexto)
+    if (chave.includes('valeria')) return 'Valeria';
     return nome;
   };
 
@@ -96,7 +106,7 @@ export default function Dashboard({
   const obterResponsavelFinal = (hub: any, analistaOriginal: any) => {
     const hubNormalizado = normalizarTexto(hub);
     if (hubNormalizado === 'sao bernardo' || hubNormalizado === 'sao bernardo do campo') return 'Cassia';
-    if (hubNormalizado === 'jurubatuba') return 'Leandro Menezes';
+    if (hubNormalizado === 'jurubatuba') return 'Valeria';
     if (analistaEstaDesligado(analistaOriginal)) return '';
     const nomeLimpo = String(analistaOriginal || '').trim();
     return resolverAlias(nomeLimpo);
